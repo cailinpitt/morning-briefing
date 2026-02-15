@@ -14,7 +14,8 @@ async function fetchTodos() {
     return null;
   }
 
-  const tasks = await res.json();
+  const data = await res.json();
+  const tasks = data.results || data;
   return tasks.map((t) => ({
     content: t.content,
     priority: t.priority,
