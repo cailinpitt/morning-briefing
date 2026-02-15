@@ -6,6 +6,8 @@ const GS = 0x1d;
 
 const CMD = {
   INIT: Buffer.from([ESC, 0x40]),
+  // Select Code Page 858 (Western European with euro sign + degree symbol at 0xF8)
+  CODEPAGE_858: Buffer.from([ESC, 0x74, 0x13]),
   BOLD_ON: Buffer.from([ESC, 0x45, 0x01]),
   BOLD_OFF: Buffer.from([ESC, 0x45, 0x00]),
   UNDERLINE_ON: Buffer.from([ESC, 0x2d, 0x01]),
@@ -23,6 +25,20 @@ const CMD = {
 
 const PAPER_WIDTH = 42; // characters at normal size
 
+// Replace common Unicode characters with ASCII equivalents
+// and strip anything else non-ASCII
+function sanitize(text) {
+  return text
+    .replace(/[\u2018\u2019\u201A]/g, "'")   // smart single quotes
+    .replace(/[\u201C\u201D\u201E]/g, '"')    // smart double quotes
+    .replace(/\u2026/g, "...")                 // ellipsis
+    .replace(/[\u2013\u2014]/g, "-")           // en/em dash
+    .replace(/\u00B0/g, "\xF8")                 // degree symbol -> CP858 0xF8
+    .replace(/\u00A0/g, " ")                   // non-breaking space
+    .replace(/\u2022/g, "*")                   // bullet
+    .replace(/[^\x20-\x7E\x0A\x0D]/g, "");   // strip remaining non-ASCII
+}
+
 class Printer {
   constructor(devicePath) {
     this.devicePath = devicePath;
@@ -31,7 +47,7 @@ class Printer {
 
   write(data) {
     if (typeof data === "string") {
-      this.buffer.push(Buffer.from(data, "utf8"));
+      this.buffer.push(Buffer.from(sanitize(data), "latin1"));
     } else {
       this.buffer.push(data);
     }
@@ -39,7 +55,8 @@ class Printer {
   }
 
   init() {
-    return this.write(CMD.INIT);
+    this.write(CMD.INIT);
+    return this.write(CMD.CODEPAGE_858);
   }
 
   bold(on = true) {

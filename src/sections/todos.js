@@ -3,7 +3,7 @@ async function fetchTodos() {
   if (!token || token === "your_token_here") return null;
 
   const filter = encodeURIComponent("today | overdue");
-  const res = await fetch(`https://api.todoist.com/rest/v2/tasks?filter=${filter}`, {
+  const res = await fetch(`https://api.todoist.com/api/v1/tasks?filter=${filter}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 

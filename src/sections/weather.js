@@ -6,11 +6,11 @@ async function fetchWeather() {
   const lon = process.env.OPENWEATHER_LON;
   if (!key || key === "your_key_here") return null;
 
-  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=metric&exclude=minutely,hourly,alerts&appid=${key}`;
+  const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=imperial&exclude=minutely,hourly,alerts&appid=${key}`;
   const res = await fetch(url);
   if (!res.ok) {
     // Fall back to 2.5 free tier
-    const fallbackUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${key}`;
+    const fallbackUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=imperial&appid=${key}`;
     const fallbackRes = await fetch(fallbackUrl);
     if (!fallbackRes.ok) {
       console.error(`Weather API error: ${fallbackRes.status} ${fallbackRes.statusText}`);
@@ -62,12 +62,12 @@ function printWeather(printer, weather) {
 
   printer.bold(true);
   printer.sizeDoubleHeight();
-  printer.printLine(`  ${weather.temp}°C`);
+  printer.printLine(`  ${weather.temp}\xB0F`);
   printer.sizeNormal();
   printer.bold(false);
 
   printer.printLine(`  ${weather.description}`);
-  printer.printLine(`  High: ${weather.high}°C  Low: ${weather.low}°C`);
+  printer.printLine(`  High: ${weather.high}\xB0F  Low: ${weather.low}\xB0F`);
   printer.printLine(`  Sunset: ${weather.sunset}`);
 }
 
