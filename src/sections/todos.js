@@ -16,10 +16,13 @@ async function fetchTodos() {
 
   const data = await res.json();
   const tasks = data.results || data;
-  return tasks.map((t) => ({
-    content: t.content,
-    priority: t.priority,
-  }));
+  const today = new Date().toISOString().slice(0, 10);
+  return tasks
+    .filter((t) => t.due && t.due.date === today)
+    .map((t) => ({
+      content: t.content,
+      priority: t.priority,
+    }));
 }
 
 function printTodos(printer, todos) {
@@ -36,8 +39,7 @@ function printTodos(printer, todos) {
   }
 
   for (const task of todos) {
-    const marker = task.priority >= 3 ? "(!)" : "[ ]";
-    printer.printWrapped(`  ${marker} ${task.content}`, 40);
+    printer.printWrapped(`  - ${task.content}`, 40);
   }
 }
 
