@@ -2,11 +2,17 @@ async function fetchTodos() {
   const token = process.env.TODOIST_API_TOKEN;
   if (!token || token === "your_token_here") return null;
 
-  const res = await fetch("https://api.todoist.com/rest/v2/tasks?filter=today|overdue", {
+  const filter = encodeURIComponent("today | overdue");
+  const res = await fetch(`https://api.todoist.com/rest/v2/tasks?filter=${filter}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error(`Todoist API error: ${res.status} ${res.statusText}`);
+    const body = await res.text().catch(() => "");
+    if (body) console.error(body);
+    return null;
+  }
 
   const tasks = await res.json();
   return tasks.map((t) => ({

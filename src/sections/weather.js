@@ -12,7 +12,12 @@ async function fetchWeather() {
     // Fall back to 2.5 free tier
     const fallbackUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${key}`;
     const fallbackRes = await fetch(fallbackUrl);
-    if (!fallbackRes.ok) return null;
+    if (!fallbackRes.ok) {
+      console.error(`Weather API error: ${fallbackRes.status} ${fallbackRes.statusText}`);
+      const body = await fallbackRes.text().catch(() => "");
+      if (body) console.error(body);
+      return null;
+    }
     const data = await fallbackRes.json();
     return {
       temp: Math.round(data.main.temp),
