@@ -40,69 +40,119 @@ function sanitize(text) {
 }
 
 class Printer {
-  constructor(devicePath) {
+  constructor(devicePath, { testMode = false } = {}) {
     this.devicePath = devicePath;
+    this.testMode = testMode;
     this.buffer = [];
+    // test mode state
+    this._lines = [];
+    this._align = "left";
+    this._bold = false;
+    this._wide = false;
+  }
+
+  _writeRaw(data) {
+    if (typeof data === "string") {
+      this.buffer.push(Buffer.from(sanitize(data), "latin1"));
+    } else {
+      this.buffer.push(data);
+    }
   }
 
   write(data) {
     if (typeof data === "string") {
-      this.buffer.push(Buffer.from(sanitize(data), "latin1"));
+      this._writeRaw(data);
     } else {
       this.buffer.push(data);
     }
     return this;
   }
 
+  _receiptLine(text) {
+    const w = this._wide ? Math.floor(PAPER_WIDTH / 2) : PAPER_WIDTH;
+    const content = text.slice(0, w);
+    let padded;
+    if (this._align === "center") {
+      const pad = Math.max(0, Math.floor((PAPER_WIDTH - content.length) / 2));
+      padded = " ".repeat(pad) + content;
+    } else if (this._align === "right") {
+      const pad = Math.max(0, PAPER_WIDTH - content.length);
+      padded = " ".repeat(pad) + content;
+    } else {
+      padded = content;
+    }
+    padded = padded.padEnd(PAPER_WIDTH);
+    if (this._bold) padded = `\x1b[1m${padded}\x1b[0m`;
+    this._lines.push(padded);
+  }
+
   init() {
-    this.write(CMD.INIT);
-    return this.write(CMD.CODEPAGE_858);
-  }
-
-  bold(on = true) {
-    return this.write(on ? CMD.BOLD_ON : CMD.BOLD_OFF);
-  }
-
-  underline(on = true) {
-    return this.write(on ? CMD.UNDERLINE_ON : CMD.UNDERLINE_OFF);
-  }
-
-  alignLeft() {
-    return this.write(CMD.ALIGN_LEFT);
-  }
-
-  alignCenter() {
-    return this.write(CMD.ALIGN_CENTER);
-  }
-
-  alignRight() {
-    return this.write(CMD.ALIGN_RIGHT);
-  }
-
-  sizeNormal() {
-    return this.write(CMD.SIZE_NORMAL);
-  }
-
-  sizeDoubleHeight() {
-    return this.write(CMD.SIZE_DOUBLE_HEIGHT);
-  }
-
-  sizeDoubleWidth() {
-    return this.write(CMD.SIZE_DOUBLE_WIDTH);
-  }
-
-  sizeDouble() {
-    return this.write(CMD.SIZE_DOUBLE);
-  }
-
-  lineFeed(lines = 1) {
-    for (let i = 0; i < lines; i++) {
-      this.write(CMD.LINE_FEED);
+    if (!this.testMode) {
+      this._writeRaw(CMD.INIT);
+      this._writeRaw(CMD.CODEPAGE_858);
     }
     return this;
   }
 
+  bold(on = true) {
+    if (this.testMode) { this._bold = on; return this; }
+    return this.write(on ? CMD.BOLD_ON : CMD.BOLD_OFF);
+  }
+
+  underline(on = true) {
+    if (this.testMode) return this;
+    return this.write(on ? CMD.UNDERLINE_ON : CMD.UNDERLINE_OFF);
+  }
+
+  alignLeft() {
+    if (this.testMode) { this._align = "left"; return this; }
+    return this.write(CMD.ALIGN_LEFT);
+  }
+
+  alignCenter() {
+    if (this.testMode) { this._align = "center"; return this; }
+    return this.write(CMD.ALIGN_CENTER);
+  }
+
+  alignRight() {
+    if (this.testMode) { this._align = "right"; return this; }
+    return this.write(CMD.ALIGN_RIGHT);
+  }
+
+  sizeNormal() {
+    if (this.testMode) { this._wide = false; return this; }
+    return this.write(CMD.SIZE_NORMAL);
+  }
+
+  sizeDoubleHeight() {
+    if (this.testMode) return this;
+    return this.write(CMD.SIZE_DOUBLE_HEIGHT);
+  }
+
+  sizeDoubleWidth() {
+    if (this.testMode) { this._wide = true; return this; }
+    return this.write(CMD.SIZE_DOUBLE_WIDTH);
+  }
+
+  sizeDouble() {
+    if (this.testMode) { this._wide = true; return this; }
+    return this.write(CMD.SIZE_DOUBLE);
+  }
+
+  lineFeed(lines = 1) {
+    if (this.testMode) {
+      for (let i = 0; i < lines; i++) this._receiptLine("");
+      return this;
+    }
+    for (let i = 0; i < lines; i++) this.write(CMD.LINE_FEED);
+    return this;
+  }
+
   printLine(text = "") {
+    if (this.testMode) {
+      this._receiptLine(sanitize(text));
+      return this;
+    }
     return this.write(text + "\n");
   }
 
@@ -145,9 +195,11 @@ class Printer {
     return this;
   }
 
-  // Print a 1-bit raster image
-  // imageData: { width, height, data } where data is a Buffer of raw 1-bit pixel rows
   printImage(imageData) {
+    if (this.testMode) {
+      this._receiptLine("[icon]");
+      return this;
+    }
     const { width, height, data } = imageData;
     const bytesPerRow = Math.ceil(width / 8);
 
@@ -169,12 +221,25 @@ class Printer {
 
   feedAndCut() {
     this.lineFeed(3);
+    if (this.testMode) return this;
     return this.write(CMD.FEED_AND_CUT);
   }
 
   flush() {
-    const output = Buffer.concat(this.buffer);
-    fs.writeFileSync(this.devicePath, output);
+    if (this.testMode) {
+      const border = "+" + "-".repeat(PAPER_WIDTH + 2) + "+";
+      const out = [border];
+      for (const line of this._lines) {
+        out.push(`| ${line} |`);
+      }
+      out.push(border);
+      out.push("  \\/ \\/ \\/ \\/ \\/ \\/ \\/ \\/");
+      process.stdout.write(out.join("\n") + "\n");
+      this._lines = [];
+    } else {
+      const output = Buffer.concat(this.buffer);
+      fs.writeFileSync(this.devicePath, output);
+    }
     this.buffer = [];
   }
 }

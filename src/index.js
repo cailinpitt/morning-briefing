@@ -8,8 +8,9 @@ const { fetchTodos, printTodos } = require("./sections/todos");
 const { fetchNews, printNews } = require("./sections/news");
 
 async function main() {
+  const testMode = process.argv.includes("--test");
   const devicePath = process.env.PRINTER_DEVICE || "/dev/usb/lp0";
-  const printer = new Printer(devicePath);
+  const printer = new Printer(devicePath, { testMode });
 
   console.log("Fetching data...");
 
