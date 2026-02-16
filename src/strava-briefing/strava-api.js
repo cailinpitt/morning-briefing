@@ -76,4 +76,16 @@ function fetchActivityPhotos(id) {
   return apiRequest(`/activities/${id}/photos?size=1024&photo_sources=true`);
 }
 
-module.exports = { fetchRecentActivities, fetchActivity, fetchActivityPhotos };
+async function fetchSegmentEfforts(segmentId) {
+  let page = 1;
+  const all = [];
+  while (true) {
+    const batch = await apiRequest(`/segment_efforts?segment_id=${segmentId}&per_page=200&page=${page}`);
+    all.push(...batch);
+    if (batch.length < 200) break;
+    page++;
+  }
+  return all;
+}
+
+module.exports = { fetchRecentActivities, fetchActivity, fetchActivityPhotos, fetchSegmentEfforts };

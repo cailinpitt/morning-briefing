@@ -1,9 +1,12 @@
 const QRCode = require("qrcode");
 const { PAPER_WIDTH } = require("../printer");
-const { fetchActivity, fetchActivityPhotos } = require("./strava-api");
+const { fetchActivity, fetchActivityPhotos, fetchSegmentEfforts } = require("./strava-api");
 const { getStatsForActivity, formatDuration, formatDistance } = require("./format-stats");
 const { renderPolylineBitmap } = require("./polyline");
 const { downloadAndDither } = require("./image");
+
+// Max number of API calls to /segment_efforts that can be in flight at a given time
+const SEGMENT_CONCURRENCY_MAX = 5;
 
 async function renderQrBitmap(text, moduleSize = 3) {
   const modules = QRCode.create(text, { errorCorrectionLevel: "L" }).modules;
@@ -34,6 +37,7 @@ async function renderQrBitmap(text, moduleSize = 3) {
 function formatDate(isoString) {
   const d = new Date(isoString);
   return d.toLocaleDateString("en-US", {
+    timeZone: "America/Chicago",
     weekday: "short",
     month: "short",
     day: "numeric",
@@ -71,7 +75,7 @@ async function printActivity(printer, activityId) {
   printer.sizeNormal();
   printer.printLine(sportTypeLabel(sportType));
   printer.bold(false);
-  printer.printLine(formatDate(activity.start_date_local));
+  printer.printLine(formatDate(activity.start_date));
   printer.alignLeft();
   printer.lineFeed(1);
 
@@ -88,8 +92,35 @@ async function printActivity(printer, activityId) {
     printer.printLine(`${label} ${dots} ${value}`);
   }
 
+  // Route map for activities with GPS data
+  if (activity.map && activity.map.summary_polyline) {
+    printer.lineFeed(1);
+    const bitmap = renderPolylineBitmap(activity.map.summary_polyline);
+    if (bitmap) {
+      printer.alignCenter();
+      printer.printImage(bitmap);
+      printer.alignLeft();
+    }
+  }
+
   // Segment efforts
   if (activity.segment_efforts && activity.segment_efforts.length > 0) {
+    // Pre-fetch historical efforts for non-PR segments
+    const segmentHistories = new Map();
+    const toFetch = activity.segment_efforts.filter((e) => !e.pr_rank);
+    for (let i = 0; i < toFetch.length; i += SEGMENT_CONCURRENCY_MAX) {
+      await Promise.all(
+        toFetch.slice(i, i + SEGMENT_CONCURRENCY_MAX).map(async (effort) => {
+          try {
+            const efforts = await fetchSegmentEfforts(effort.segment.id);
+            segmentHistories.set(effort.segment.id, efforts);
+          } catch {
+            // Skip on API error
+          }
+        })
+      );
+    }
+
     printer.lineFeed(1);
     printer.bold(true);
     printer.printLine("Segments");
@@ -111,17 +142,17 @@ async function printActivity(printer, activityId) {
       const time = formatDuration(effort.elapsed_time);
       const dist = formatDistance(effort.segment.distance);
       printer.printLine(`  ${time}  |  ${dist}`);
-    }
-  }
 
-  // Route map for activities with GPS data
-  if (activity.map && activity.map.summary_polyline) {
-    printer.lineFeed(1);
-    const bitmap = renderPolylineBitmap(activity.map.summary_polyline);
-    if (bitmap) {
-      printer.alignCenter();
-      printer.printImage(bitmap);
-      printer.alignLeft();
+      // For non-PR efforts, show comparison to 3rd best
+      const history = segmentHistories.get(effort.segment.id);
+      if (history) {
+        const sorted = history.map((e) => e.elapsed_time).sort((a, b) => a - b);
+        const thirdBest = sorted[Math.min(2, sorted.length - 1)];
+        const diff = effort.elapsed_time - thirdBest;
+        if (diff > 0) {
+          printer.printLine(`  +${formatDuration(diff)} from top 3`);
+        }
+      }
     }
   }
 

@@ -36,7 +36,7 @@ function getStatsForActivity(activity) {
     if (activity.total_elevation_gain) stats.push({ label: "Elevation", value: formatElevation(activity.total_elevation_gain) });
     if (activity.average_heartrate) stats.push({ label: "Avg HR", value: `${Math.round(activity.average_heartrate)} bpm` });
   } else if (type === "WeightTraining") {
-    stats.push({ label: "Moving Time", value: formatDuration(activity.moving_time) });
+    stats.push({ label: "Lifting Duration", value: formatDuration(activity.moving_time) });
     if (activity.calories) stats.push({ label: "Calories", value: `${Math.round(activity.calories)} kcal` });
     if (activity.average_heartrate) stats.push({ label: "Avg HR", value: `${Math.round(activity.average_heartrate)} bpm` });
   } else if (type === "Walk" || type === "Hike") {
