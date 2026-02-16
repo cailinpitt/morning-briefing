@@ -63,6 +63,8 @@ function getStatsForActivity(activity) {
     if (activity.average_heartrate) stats.push({ label: "Avg HR", value: `${Math.round(activity.average_heartrate)} bpm` });
   }
 
+  if (activity.kudos_count && activity.kudos_count > 0) stats.push({ label: "Kudos", value: `${activity.kudos_count} likes` });
+
   return stats;
 }
 

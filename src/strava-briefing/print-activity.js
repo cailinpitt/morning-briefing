@@ -77,6 +77,17 @@ async function printActivity(printer, activityId) {
     }
   }
 
+  if (activity.description) {
+    printer.lineFeed(1);
+    printer.bold(true);
+    printer.printLine("Description");
+    printer.bold(false);
+    printer.printDivider("-");
+    printer.alignLeft();
+    printer.printWrapped(activity.description, PAPER_WIDTH);
+    printer.lineFeed(1);
+  }
+
   // Segment efforts
   if (activity.segment_efforts && activity.segment_efforts.length > 0) {
     // Pre-fetch historical efforts for non-PR segments
@@ -162,11 +173,6 @@ async function printActivity(printer, activityId) {
 
   // Footer
   printer.lineFeed(1);
-  if (activity.description) {
-    printer.alignLeft();
-    printer.printWrapped(activity.description, PAPER_WIDTH);
-    printer.lineFeed(1);
-  }
   printer.alignCenter();
   const qr = await renderQrBitmap(`https://www.strava.com/activities/${activityId}`);
   printer.printImage(qr);
