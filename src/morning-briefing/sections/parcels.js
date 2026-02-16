@@ -40,6 +40,8 @@ async function fetchParcels() {
     expectedEnd: d.date_expected_end || null,
     latestEvent: d.events && d.events.length > 0 ? d.events[0].event : null,
     latestLocation: d.events && d.events.length > 0 ? d.events[0].location : null,
+    latestEventDate: d.events && d.events.length > 0 ? new Date(d.events[0].date).toDateString() : null,
+    carrierCode: d.carrier_code,
   }));
 }
 
@@ -69,7 +71,7 @@ function printParcels(printer, parcels) {
 
   for (const parcel of parcels) {
     printer.bold(true);
-    printer.printWrapped(`  ${parcel.description}`, 40);
+    printer.printWrapped(`  ${parcel.description} (${parcel.carrierCode})`, 40);
     printer.bold(false);
 
     let detail = `  ${parcel.status}`;
@@ -80,6 +82,7 @@ function printParcels(printer, parcels) {
     if (parcel.latestEvent) {
       let event = `  > ${parcel.latestEvent}`;
       if (parcel.latestLocation) event += ` (${parcel.latestLocation})`;
+      if (parcel.latestEventDate) event += ` - ${parcel.latestEventDate}`;
       printer.printWrapped(event, 40);
     }
   }
