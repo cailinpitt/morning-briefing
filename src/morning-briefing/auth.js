@@ -1,9 +1,9 @@
 // One-time Google Calendar OAuth2 authorization script.
-// Run with: node src/auth.js
+// Run with: node src/morning-briefing/auth.js
 // This opens a browser for consent, captures the auth code,
 // and prints the refresh token to add to your .env file.
 
-require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
 const http = require("http");
 const { google } = require("googleapis");
@@ -68,7 +68,7 @@ async function main() {
   }
 
   // Update .env file with the refresh token
-  const envPath = path.join(__dirname, "..", ".env");
+  const envPath = path.join(__dirname, "..", "..", ".env");
   let envContent = fs.readFileSync(envPath, "utf8");
   envContent = envContent.replace(
     /^GOOGLE_REFRESH_TOKEN=.*$/m,

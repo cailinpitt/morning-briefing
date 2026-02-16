@@ -1,5 +1,3 @@
-const { getWeatherIcon } = require("../utils/icons");
-
 async function fetchWeather() {
   const key = process.env.OPENWEATHER_API_KEY;
   const lat = process.env.OPENWEATHER_LAT;
@@ -53,12 +51,6 @@ function printWeather(printer, weather) {
     printer.printLine("  Weather data unavailable.");
     return;
   }
-
-  const icon = getWeatherIcon(weather.conditionCode);
-  printer.alignCenter();
-  printer.printImage(icon);
-  printer.alignLeft();
-  printer.lineFeed(1);
 
   printer.bold(true);
   printer.sizeDoubleHeight();

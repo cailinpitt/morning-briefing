@@ -1,6 +1,6 @@
-require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
 
-const { Printer } = require("./printer");
+const { Printer } = require("../printer");
 const { printHeader } = require("./sections/header");
 const { fetchWeather, printWeather } = require("./sections/weather");
 const { fetchCalendarEvents, printCalendar } = require("./sections/calendar");

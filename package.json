@@ -1,11 +1,12 @@
 {
-  "name": "morning-briefing",
+  "name": "briefings",
   "version": "1.0.0",
-  "description": "Daily briefing receipt printer for Epson TM-T20III",
-  "main": "src/index.js",
+  "description": "Receipt printer briefings for Epson TM-T20III",
+  "main": "src/morning-briefing/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "auth": "node src/auth.js"
+    "morning": "node src/morning-briefing/index.js",
+    "morning:test": "node src/morning-briefing/index.js --test",
+    "auth": "node src/morning-briefing/auth.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
