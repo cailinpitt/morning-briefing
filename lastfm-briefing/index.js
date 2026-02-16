@@ -11,6 +11,7 @@ const {
   fetchArtistTags,
 } = require("./lastfm-api");
 const { printBriefing } = require("./print-briefing");
+const { addRecommendationsToSpotify } = require("./spotify-api");
 
 async function main() {
   const testMode = process.argv.includes("--test");
@@ -61,6 +62,14 @@ async function main() {
 
   console.log(`${scrobbles.thisWeek} scrobbles this week (${scrobbles.lastWeek} last week), ${topArtists.length} top artists.`);
 
+  let spotify = { added: 0, playlistName: null };
+  try {
+    spotify = await addRecommendationsToSpotify(recommendations);
+    if (spotify.added > 0) console.log(`Added ${spotify.added} track(s) to ${spotify.playlistName} playlist.`);
+  } catch (err) {
+    console.error("Spotify error (continuing):", err.message);
+  }
+
   printer.init();
   await printBriefing(printer, {
     scrobbles,
@@ -69,6 +78,7 @@ async function main() {
     topTracks,
     artistTags,
     recommendations,
+    spotify,
   });
   printer.flush();
 

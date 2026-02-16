@@ -30,7 +30,7 @@ function aggregateGenres(artistTags) {
 }
 
 async function printBriefing(printer, data) {
-  const { scrobbles, topArtists, topAlbums, topTracks, artistTags, recommendations } = data;
+  const { scrobbles, topArtists, topAlbums, topTracks, artistTags, recommendations, spotify } = data;
 
   // Header
   printer.alignCenter();
@@ -127,6 +127,10 @@ async function printBriefing(printer, data) {
       printer.printLine(`   ${r.artist}`);
       const sources = [...new Set(r.because)].slice(0, 2).join(", ");
       printer.printLine(`   via ${sources}`);
+    }
+    if (spotify?.added > 0) {
+      const name = spotify.playlistName.replace(/[^\x20-\x7E]/g, "").replace(/\s+/g, " ").trim();
+      printer.printLine(`Added ${spotify.added} to ${name} playlist.`);
     }
   }
 

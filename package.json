@@ -11,7 +11,8 @@
     "strava:test": "node strava-briefing/index.js --test",
     "strava:auth": "node strava-briefing/auth.js",
     "lastfm": "node lastfm-briefing/index.js",
-    "lastfm:test": "node lastfm-briefing/index.js --test"
+    "lastfm:test": "node lastfm-briefing/index.js --test",
+    "spotify:auth": "node lastfm-briefing/auth-spotify.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

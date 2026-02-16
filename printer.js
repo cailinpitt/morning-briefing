@@ -233,7 +233,7 @@ class Printer {
         out.push(`| ${line} |`);
       }
       out.push(border);
-      const edge = ("\\/  ").repeat(11).trimEnd();
+      const edge = ("\\/  ").repeat(Math.ceil((PAPER_WIDTH + 4) / 4)).slice(0, PAPER_WIDTH + 4).trimEnd();
       out.push(" " + edge);
       process.stdout.write(out.join("\n") + "\n");
       this._lines = [];

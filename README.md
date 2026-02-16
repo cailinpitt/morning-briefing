@@ -34,6 +34,13 @@ STRAVA_REFRESH_TOKEN=
 # Last.fm briefing
 LASTFM_API_KEY=
 LASTFM_USERNAME=
+
+# Spotify (Last.fm recommendations playlist)
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+SPOTIFY_ACCESS_TOKEN=
+SPOTIFY_REFRESH_TOKEN=
+SPOTIFY_PLAYLIST_ID=
 ```
 
 ## Morning briefing
@@ -178,6 +185,20 @@ Prints a weekly music listening summary: total scrobbles with week-over-week com
 
 No OAuth needed — Last.fm's read endpoints just use an API key and username.
 
+### Spotify playlist (optional)
+
+Track recommendations can be automatically added to a Spotify playlist. Tracks accumulate over time and duplicates are skipped.
+
+1. Go to https://developer.spotify.com/dashboard and create an app
+2. Set redirect URI to `http://127.0.0.1:3000/callback`
+3. Copy Client ID and Client Secret to `.env`
+4. Create an empty playlist in Spotify, copy its ID to `SPOTIFY_PLAYLIST_ID` in `.env`
+5. Run `npm run spotify:auth`
+
+Access tokens expire every hour. The script automatically refreshes them and saves the new tokens to `.env`. No manual re-auth needed.
+
+If Spotify is not configured, the briefing still prints normally without it.
+
 ### Run
 
 ```
@@ -238,6 +259,7 @@ npm run lastfm:test      # ASCII output to terminal
 | 2. Camel Crew                              |
 |    Sports Team                             |
 |    via Famous                              |
+| Added 2 to Need to listen! playlist.      |
 |                                            |
 |                 [QR code]                  |
 |                                            |
