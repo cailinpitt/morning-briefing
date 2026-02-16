@@ -1,7 +1,7 @@
 const QRCode = require("qrcode");
 const { PAPER_WIDTH } = require("../printer");
 const { fetchActivity, fetchActivityPhotos } = require("./strava-api");
-const { getStatsForActivity } = require("./format-stats");
+const { getStatsForActivity, formatDuration, formatDistance } = require("./format-stats");
 const { renderPolylineBitmap } = require("./polyline");
 const { downloadAndDither } = require("./image");
 
@@ -88,6 +88,32 @@ async function printActivity(printer, activityId) {
     printer.printLine(`${label} ${dots} ${value}`);
   }
 
+  // Segment efforts
+  if (activity.segment_efforts && activity.segment_efforts.length > 0) {
+    printer.lineFeed(1);
+    printer.bold(true);
+    printer.printLine("Segments");
+    printer.bold(false);
+    printer.printDivider("-");
+
+    for (const effort of activity.segment_efforts) {
+      // Segment name with PR badge
+      let badge = "";
+      if (effort.pr_rank === 1) badge = " ** PR!";
+      else if (effort.pr_rank === 2) badge = " * 2nd";
+      else if (effort.pr_rank === 3) badge = " * 3rd";
+
+      printer.bold(!!effort.pr_rank);
+      printer.printWrapped(effort.name + badge);
+      printer.bold(false);
+
+      // Time and distance on one line
+      const time = formatDuration(effort.elapsed_time);
+      const dist = formatDistance(effort.segment.distance);
+      printer.printLine(`  ${time}  |  ${dist}`);
+    }
+  }
+
   // Route map for activities with GPS data
   if (activity.map && activity.map.summary_polyline) {
     printer.lineFeed(1);
@@ -131,11 +157,12 @@ async function printActivity(printer, activityId) {
 
   // Footer
   printer.lineFeed(1);
-  printer.alignCenter();
   if (activity.description) {
+    printer.alignLeft();
     printer.printWrapped(activity.description, PAPER_WIDTH);
     printer.lineFeed(1);
   }
+  printer.alignCenter();
   const qr = await renderQrBitmap(`https://www.strava.com/activities/${activityId}`);
   printer.printImage(qr);
   printer.alignLeft();

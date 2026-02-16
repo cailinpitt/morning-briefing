@@ -6,18 +6,20 @@ const { Printer } = require("../printer");
 const { fetchRecentActivities } = require("./strava-api");
 const { printActivity } = require("./print-activity");
 
-const STATE_FILE = path.join(__dirname, "..", "..", ".last-activity");
+const STATE_FILE = path.join(__dirname, "..", "..", ".seen-activities");
 
-function readLastActivityId() {
+function readSeenIds() {
   try {
-    return fs.readFileSync(STATE_FILE, "utf8").trim();
+    const content = fs.readFileSync(STATE_FILE, "utf8").trim();
+    if (!content) return new Set();
+    return new Set(content.split("\n").map((s) => s.trim()).filter(Boolean));
   } catch {
-    return null;
+    return new Set();
   }
 }
 
-function writeLastActivityId(id) {
-  fs.writeFileSync(STATE_FILE, String(id));
+function writeSeenIds(seenIds) {
+  fs.writeFileSync(STATE_FILE, [...seenIds].join("\n") + "\n");
 }
 
 async function main() {
@@ -48,18 +50,16 @@ async function main() {
     return;
   }
 
-  let lastSeenId = readLastActivityId();
+  const seenIds = readSeenIds();
 
-  // First run or empty file: print the most recent activity
-  const newActivities = [];
-  if (!lastSeenId) {
-    newActivities.push(activities[0]);
-  } else {
-    for (const a of activities) {
-      if (String(a.id) === String(lastSeenId)) break;
-      newActivities.push(a);
+  // First run or empty file: print the most recent activity, mark all others as seen
+  if (seenIds.size === 0) {
+    for (let i = 1; i < activities.length; i++) {
+      seenIds.add(String(activities[i].id));
     }
   }
+
+  const newActivities = activities.filter((a) => !seenIds.has(String(a.id)));
 
   if (newActivities.length === 0) {
     console.log("No new activities.");
@@ -77,13 +77,13 @@ async function main() {
     try {
       await printActivity(printer, activity.id);
       printer.flush();
+      seenIds.add(String(activity.id));
+      writeSeenIds(seenIds);
     } catch (err) {
       console.error(`Failed to print activity ${activity.id}: ${err.message}`);
     }
   }
 
-  // Update state with the most recent activity ID
-  writeLastActivityId(activities[0].id);
   console.log("Done.");
 }
 

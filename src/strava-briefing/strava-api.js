@@ -73,7 +73,7 @@ function fetchActivity(id) {
 }
 
 function fetchActivityPhotos(id) {
-  return apiRequest(`/activities/${id}/photos?size=600&photo_sources=true`);
+  return apiRequest(`/activities/${id}/photos?size=1024&photo_sources=true`);
 }
 
 module.exports = { fetchRecentActivities, fetchActivity, fetchActivityPhotos };

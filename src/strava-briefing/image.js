@@ -8,7 +8,7 @@ async function downloadAndDither(url, maxWidth = 384) {
 
   // Resize and convert to single-channel grayscale
   const { data, info } = await sharp(inputBuf)
-    .resize({ width: maxWidth, withoutEnlargement: true })
+    .resize({ width: maxWidth })
     .grayscale()
     .raw()
     .toBuffer({ resolveWithObject: true });

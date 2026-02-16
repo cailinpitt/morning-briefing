@@ -8,18 +8,18 @@ function formatDuration(seconds) {
 }
 
 function formatDistance(meters) {
-  const km = meters / 1000;
-  if (km >= 10) return `${km.toFixed(1)} km`;
-  return `${km.toFixed(2)} km`;
+  const mi = meters / 1609.344;
+  if (mi >= 10) return `${mi.toFixed(1)} mi`;
+  return `${mi.toFixed(2)} mi`;
 }
 
 function formatSpeed(metersPerSec) {
-  const kph = metersPerSec * 3.6;
-  return `${kph.toFixed(1)} km/h`;
+  const mph = metersPerSec * 2.23694;
+  return `${mph.toFixed(1)} mph`;
 }
 
 function formatElevation(meters) {
-  return `${Math.round(meters)} m`;
+  return `${Math.round(meters * 3.28084)} ft`;
 }
 
 function getStatsForActivity(activity) {
@@ -48,11 +48,11 @@ function getStatsForActivity(activity) {
     stats.push({ label: "Distance", value: formatDistance(activity.distance) });
     stats.push({ label: "Moving Time", value: formatDuration(activity.moving_time) });
     if (activity.average_speed) {
-      // Show pace (min/km) for runs
-      const paceSecPerKm = 1000 / activity.average_speed;
-      const paceMin = Math.floor(paceSecPerKm / 60);
-      const paceSec = Math.round(paceSecPerKm % 60);
-      stats.push({ label: "Avg Pace", value: `${paceMin}:${String(paceSec).padStart(2, "0")} /km` });
+      // Show pace (min/mi) for runs
+      const paceSecPerMi = 1609.344 / activity.average_speed;
+      const paceMin = Math.floor(paceSecPerMi / 60);
+      const paceSec = Math.round(paceSecPerMi % 60);
+      stats.push({ label: "Avg Pace", value: `${paceMin}:${String(paceSec).padStart(2, "0")} /mi` });
     }
     if (activity.total_elevation_gain) stats.push({ label: "Elevation", value: formatElevation(activity.total_elevation_gain) });
     if (activity.average_heartrate) stats.push({ label: "Avg HR", value: `${Math.round(activity.average_heartrate)} bpm` });
