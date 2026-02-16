@@ -1,7 +1,7 @@
 // One-time Strava OAuth2 authorization script.
 // Run with: npm run strava:auth
 
-require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
 const http = require("http");
 const fs = require("fs");
@@ -71,7 +71,7 @@ async function main() {
   }
 
   const tokens = await resp.json();
-  const envPath = path.join(__dirname, "..", "..", ".env");
+  const envPath = path.join(__dirname, "..", ".env");
   let envContent = fs.readFileSync(envPath, "utf8");
 
   // Update or append tokens

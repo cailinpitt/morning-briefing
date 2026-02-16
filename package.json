@@ -2,16 +2,16 @@
   "name": "briefings",
   "version": "1.0.0",
   "description": "Receipt printer briefings for Epson TM-T20III",
-  "main": "src/morning-briefing/index.js",
+  "main": "morning-briefing/index.js",
   "scripts": {
-    "morning": "node src/morning-briefing/index.js",
-    "morning:test": "node src/morning-briefing/index.js --test",
-    "auth": "node src/morning-briefing/auth.js",
-    "strava": "node src/strava-briefing/index.js",
-    "strava:test": "node src/strava-briefing/index.js --test",
-    "strava:auth": "node src/strava-briefing/auth.js",
-    "lastfm": "node src/lastfm-briefing/index.js",
-    "lastfm:test": "node src/lastfm-briefing/index.js --test"
+    "morning": "node morning-briefing/index.js",
+    "morning:test": "node morning-briefing/index.js --test",
+    "auth": "node morning-briefing/auth.js",
+    "strava": "node strava-briefing/index.js",
+    "strava:test": "node strava-briefing/index.js --test",
+    "strava:auth": "node strava-briefing/auth.js",
+    "lastfm": "node lastfm-briefing/index.js",
+    "lastfm:test": "node lastfm-briefing/index.js --test"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

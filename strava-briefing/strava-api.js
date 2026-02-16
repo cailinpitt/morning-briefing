@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 const BASE_URL = "https://www.strava.com/api/v3";
-const ENV_PATH = path.join(__dirname, "..", "..", ".env");
+const ENV_PATH = path.join(__dirname, "..", ".env");
 
 let accessToken = process.env.STRAVA_ACCESS_TOKEN;
 

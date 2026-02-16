@@ -1,4 +1,4 @@
-require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
 const fs = require("fs");
 const path = require("path");
@@ -6,7 +6,7 @@ const { Printer } = require("../printer");
 const { fetchRecentActivities } = require("./strava-api");
 const { printActivity } = require("./print-activity");
 
-const STATE_FILE = path.join(__dirname, "..", "..", ".seen-activities");
+const STATE_FILE = path.join(__dirname, "..", ".seen-activities");
 
 function readSeenIds() {
   try {

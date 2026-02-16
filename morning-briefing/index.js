@@ -1,4 +1,4 @@
-require("dotenv").config({ path: require("path").join(__dirname, "..", "..", ".env") });
+require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
 const { Printer } = require("../printer");
 const { printHeader } = require("./sections/header");
