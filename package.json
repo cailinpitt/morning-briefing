@@ -6,10 +6,14 @@
   "scripts": {
     "morning": "node src/morning-briefing/index.js",
     "morning:test": "node src/morning-briefing/index.js --test",
-    "auth": "node src/morning-briefing/auth.js"
+    "auth": "node src/morning-briefing/auth.js",
+    "strava": "node src/strava-briefing/index.js",
+    "strava:test": "node src/strava-briefing/index.js --test",
+    "strava:auth": "node src/strava-briefing/auth.js"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
-    "googleapis": "^144.0.0"
+    "googleapis": "^144.0.0",
+    "sharp": "^0.33.0"
   }
 }
