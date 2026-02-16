@@ -1,0 +1,122 @@
+const API_KEY = process.env.LASTFM_API_KEY;
+const USERNAME = process.env.LASTFM_USERNAME;
+const BASE = "https://ws.audioscrobbler.com/2.0/";
+
+async function apiCall(params) {
+  const url = new URL(BASE);
+  url.searchParams.set("api_key", API_KEY);
+  url.searchParams.set("format", "json");
+  for (const [k, v] of Object.entries(params)) {
+    url.searchParams.set(k, v);
+  }
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Last.fm API error: ${res.status}`);
+  return res.json();
+}
+
+async function fetchScrobbleCount(from, to) {
+  const data = await apiCall({
+    method: "user.getRecentTracks",
+    user: USERNAME,
+    from,
+    to,
+    limit: 1,
+  });
+  return parseInt(data.recenttracks["@attr"].total, 10);
+}
+
+async function fetchWeeklyScrobbleCounts() {
+  const now = Math.floor(Date.now() / 1000);
+  const weekAgo = now - 7 * 24 * 60 * 60;
+  const twoWeeksAgo = now - 14 * 24 * 60 * 60;
+  const [thisWeek, lastWeek] = await Promise.all([
+    fetchScrobbleCount(weekAgo, now),
+    fetchScrobbleCount(twoWeeksAgo, weekAgo),
+  ]);
+  return { thisWeek, lastWeek };
+}
+
+async function fetchTopArtists(limit = 5) {
+  const data = await apiCall({
+    method: "user.getTopArtists",
+    user: USERNAME,
+    period: "7day",
+    limit,
+  });
+  return data.topartists.artist.map((a) => ({
+    name: a.name,
+    playcount: parseInt(a.playcount, 10),
+  }));
+}
+
+async function fetchTopAlbums(limit = 5) {
+  const data = await apiCall({
+    method: "user.getTopAlbums",
+    user: USERNAME,
+    period: "7day",
+    limit,
+  });
+  return data.topalbums.album.map((a) => ({
+    name: a.name,
+    artist: a.artist.name,
+    playcount: parseInt(a.playcount, 10),
+  }));
+}
+
+async function fetchTopTracks(limit = 5) {
+  const data = await apiCall({
+    method: "user.getTopTracks",
+    user: USERNAME,
+    period: "7day",
+    limit,
+  });
+  return data.toptracks.track.map((t) => ({
+    name: t.name,
+    artist: t.artist.name,
+    playcount: parseInt(t.playcount, 10),
+  }));
+}
+
+async function fetchSimilarTracks(track, artist, limit = 5) {
+  const data = await apiCall({
+    method: "track.getSimilar",
+    track,
+    artist,
+    limit,
+  });
+  if (!data.similartracks || !data.similartracks.track) return [];
+  return data.similartracks.track.map((t) => ({
+    name: t.name,
+    artist: t.artist.name,
+    match: parseFloat(t.match),
+  }));
+}
+
+async function fetchAllTimeArtists(limit = 200) {
+  const data = await apiCall({
+    method: "user.getTopArtists",
+    user: USERNAME,
+    period: "overall",
+    limit,
+  });
+  return new Set(data.topartists.artist.map((a) => a.name.toLowerCase()));
+}
+
+async function fetchArtistTags(artist) {
+  const data = await apiCall({
+    method: "artist.getTopTags",
+    artist,
+  });
+  if (!data.toptags || !data.toptags.tag) return [];
+  return data.toptags.tag.slice(0, 3).map((t) => t.name.toLowerCase());
+}
+
+module.exports = {
+  fetchWeeklyScrobbleCounts,
+  fetchTopArtists,
+  fetchTopAlbums,
+  fetchTopTracks,
+  fetchSimilarTracks,
+  fetchAllTimeArtists,
+  fetchArtistTags,
+};

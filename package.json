@@ -9,7 +9,9 @@
     "auth": "node src/morning-briefing/auth.js",
     "strava": "node src/strava-briefing/index.js",
     "strava:test": "node src/strava-briefing/index.js --test",
-    "strava:auth": "node src/strava-briefing/auth.js"
+    "strava:auth": "node src/strava-briefing/auth.js",
+    "lastfm": "node src/lastfm-briefing/index.js",
+    "lastfm:test": "node src/lastfm-briefing/index.js --test"
   },
   "dependencies": {
     "dotenv": "^16.4.7",

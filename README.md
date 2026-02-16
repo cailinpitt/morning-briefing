@@ -23,17 +23,22 @@ OPENWEATHER_API_KEY=
 OPENWEATHER_LAT=
 OPENWEATHER_LON=
 TODOIST_API_TOKEN=
+PARCEL_API_KEY=
 
 # Strava briefing
 STRAVA_CLIENT_ID=
 STRAVA_CLIENT_SECRET=
 STRAVA_ACCESS_TOKEN=
 STRAVA_REFRESH_TOKEN=
+
+# Last.fm briefing
+LASTFM_API_KEY=
+LASTFM_USERNAME=
 ```
 
 ## Morning briefing
 
-Prints weather, calendar events, todos, and news headlines.
+Prints weather, calendar events, todos, news headlines, and active parcel shipments.
 
 ### Auth
 
@@ -102,7 +107,7 @@ npm run morning:test     # ASCII output to terminal
 
 ## Strava briefing
 
-Checks for new Strava activities and prints a summary. Bike rides and walks get a route map rendered from the GPS polyline. Weight training sessions get Hevy workout photos. Segments show PR badges and time comparisons.
+Checks for new Strava activities and prints a summary. Bike rides and walks get a route map rendered from the GPS polyline. Weight training sessions get Hevy workout photos. Segments show PR badges and time comparisons. Activity descriptions and kudos counts are included when available.
 
 ### Auth
 
@@ -162,6 +167,84 @@ On first run, it prints the most recent activity and marks the rest as seen. Sub
  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/
 ```
 
+## Last.fm briefing
+
+Prints a weekly music listening summary: total scrobbles with week-over-week comparison, top artists, albums, tracks, and genres. Includes track recommendations based on your listening history, sourced from artists you haven't listened to before.
+
+### Setup
+
+1. Go to https://www.last.fm/api/account/create and create an application
+2. Set `LASTFM_API_KEY` and `LASTFM_USERNAME` in `.env`
+
+No OAuth needed — Last.fm's read endpoints just use an API key and username.
+
+### Run
+
+```
+npm run lastfm           # print to receipt printer
+npm run lastfm:test      # ASCII output to terminal
+```
+
+### Example output
+
+```
++--------------------------------------------+
+|                  LAST.FM                   |
+|              WEEKLY REPORT                 |
+|              Feb 9 - Feb 16               |
+|                                            |
+| Total Scrobbles                            |
+| ------------------------------------------ |
+|                   593                      |
+|          +6% from last week (559)          |
+|                                            |
+| Top Artists                                |
+| ------------------------------------------ |
+| 1. Turnstile .......................... 44 |
+| 2. provoker ........................... 27 |
+| 3. Wet Leg ............................ 24 |
+| 4. Moon Tide Gallery .................. 21 |
+| 5. Casino Hearts ...................... 15 |
+|                                            |
+| Top Albums                                 |
+| ------------------------------------------ |
+| 1. NEVER ENOUGH ....................... 43 |
+|    Turnstile                               |
+| 2. Mausoleum .......................... 27 |
+|    provoker                                |
+| 3. moisturizer ........................ 24 |
+|    Wet Leg                                 |
+|                                            |
+| Top Tracks                                 |
+| ------------------------------------------ |
+| 1. Down ............................... 11 |
+|    Triathalon                              |
+| 2. What Happened ....................... 8 |
+|    Moon Tide Gallery                       |
+| 3. A Dream Goes On Forever ............. 8 |
+|    Vegyn                                   |
+|                                            |
+| Top Genres                                 |
+| ------------------------------------------ |
+| 1. post-punk                               |
+| 2. darkwave                                |
+| 3. coldwave                                |
+|                                            |
+| Recommended                                |
+| ------------------------------------------ |
+| 1. Here It Comes Again                     |
+|    Sports Team                             |
+|    via Famous                              |
+| 2. Camel Crew                              |
+|    Sports Team                             |
+|    via Famous                              |
+|                                            |
+|                 [QR code]                  |
+|                                            |
++--------------------------------------------+
+ \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/
+```
+
 ## Test mode
 
-Both scripts accept `--test` to print ASCII receipts to the terminal instead of the printer.
+All scripts accept `--test` to print ASCII receipts to the terminal instead of the printer.

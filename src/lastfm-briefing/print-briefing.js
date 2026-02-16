@@ -1,0 +1,143 @@
+const { PAPER_WIDTH } = require("../printer");
+const { renderQrBitmap } = require("../utils/qr");
+
+function formatDateRange() {
+  const now = new Date();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const fmt = (d) =>
+    d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return `${fmt(weekAgo)} - ${fmt(now)}`;
+}
+
+function leaderLine(label, value) {
+  const dots = ".".repeat(
+    Math.max(1, PAPER_WIDTH - label.length - value.length - 2)
+  );
+  return `${label} ${dots} ${value}`;
+}
+
+function aggregateGenres(artistTags) {
+  const counts = {};
+  for (const [, tags] of Object.entries(artistTags)) {
+    for (const tag of tags) {
+      counts[tag] = (counts[tag] || 0) + 1;
+    }
+  }
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([tag]) => tag);
+}
+
+async function printBriefing(printer, data) {
+  const { scrobbles, topArtists, topAlbums, topTracks, artistTags, recommendations } = data;
+
+  // Header
+  printer.alignCenter();
+  printer.bold(true);
+  printer.sizeDoubleWidth();
+  printer.printLine("LAST.FM");
+  printer.sizeNormal();
+  printer.printLine("WEEKLY REPORT");
+  printer.bold(false);
+  printer.printLine(formatDateRange());
+  printer.alignLeft();
+
+  // Total scrobbles
+  printer.printSectionTitle("Total Scrobbles");
+  printer.alignCenter();
+  printer.sizeDouble();
+  printer.bold(true);
+  printer.printLine(String(scrobbles.thisWeek));
+  printer.sizeNormal();
+  printer.bold(false);
+  if (scrobbles.lastWeek > 0) {
+    const diff = scrobbles.thisWeek - scrobbles.lastWeek;
+    const pct = Math.round((diff / scrobbles.lastWeek) * 100);
+    const sign = pct >= 0 ? "+" : "";
+    printer.printLine(`${sign}${pct}% from last week (${scrobbles.lastWeek})`);
+  }
+  printer.alignLeft();
+
+  // Top Artists
+  if (topArtists.length > 0) {
+    printer.printSectionTitle("Top Artists");
+    for (let i = 0; i < topArtists.length; i++) {
+      const a = topArtists[i];
+      const label = `${i + 1}. ${a.name}`;
+      const value = `${a.playcount}`;
+      if (label.length + value.length + 2 > PAPER_WIDTH) {
+        printer.printLine(`${i + 1}. ${a.name}`);
+        printer.printLine(leaderLine("   ", value));
+      } else {
+        printer.printLine(leaderLine(label, value));
+      }
+    }
+  }
+
+  // Top Albums
+  if (topAlbums.length > 0) {
+    printer.printSectionTitle("Top Albums");
+    for (let i = 0; i < topAlbums.length; i++) {
+      const a = topAlbums[i];
+      const label = `${i + 1}. ${a.name}`;
+      const value = `${a.playcount}`;
+      if (label.length + value.length + 2 > PAPER_WIDTH) {
+        printer.printLine(`${i + 1}. ${a.name}`);
+        printer.printLine(leaderLine(`   ${a.artist}`, value));
+      } else {
+        printer.printLine(leaderLine(label, value));
+        printer.printLine(`   ${a.artist}`);
+      }
+    }
+  }
+
+  // Top Tracks
+  if (topTracks.length > 0) {
+    printer.printSectionTitle("Top Tracks");
+    for (let i = 0; i < topTracks.length; i++) {
+      const t = topTracks[i];
+      const label = `${i + 1}. ${t.name}`;
+      const value = `${t.playcount}`;
+      if (label.length + value.length + 2 > PAPER_WIDTH) {
+        printer.printLine(`${i + 1}. ${t.name}`);
+        printer.printLine(leaderLine(`   ${t.artist}`, value));
+      } else {
+        printer.printLine(leaderLine(label, value));
+        printer.printLine(`   ${t.artist}`);
+      }
+    }
+  }
+
+  // Top Genres
+  const genres = aggregateGenres(artistTags);
+  if (genres.length > 0) {
+    printer.printSectionTitle("Top Genres");
+    for (let i = 0; i < genres.length; i++) {
+      printer.printLine(`${i + 1}. ${genres[i]}`);
+    }
+  }
+
+  // Recommendations
+  if (recommendations && recommendations.length > 0) {
+    printer.printSectionTitle("Recommended");
+    for (let i = 0; i < recommendations.length; i++) {
+      const r = recommendations[i];
+      printer.printLine(`${i + 1}. ${r.name}`);
+      printer.printLine(`   ${r.artist}`);
+      const sources = [...new Set(r.because)].slice(0, 2).join(", ");
+      printer.printLine(`   via ${sources}`);
+    }
+  }
+
+  // Footer QR
+  printer.lineFeed(1);
+  printer.alignCenter();
+  const username = process.env.LASTFM_USERNAME;
+  const qr = await renderQrBitmap(`https://www.last.fm/user/${username}`);
+  printer.printImage(qr);
+  printer.alignLeft();
+  printer.feedAndCut();
+}
+
+module.exports = { printBriefing };
