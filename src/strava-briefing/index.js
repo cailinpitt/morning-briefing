@@ -25,6 +25,23 @@ async function main() {
   const devicePath = process.env.PRINTER_DEVICE || "/dev/usb/lp0";
   const printer = new Printer(devicePath, { testMode });
 
+  // Manual mode: print a specific activity by ID
+  const idFlagIndex = process.argv.indexOf("--id");
+  if (idFlagIndex !== -1) {
+    const activityId = process.argv[idFlagIndex + 1];
+    if (!activityId) {
+      console.error("Usage: --id <activity_id>");
+      process.exit(1);
+    }
+    console.log(`Printing activity ${activityId}...`);
+    printer.init();
+    await printActivity(printer, activityId);
+    printer.flush();
+    console.log("Done.");
+    return;
+  }
+
+  // Auto mode: check for new activities
   const activities = await fetchRecentActivities();
   if (!activities || activities.length === 0) {
     console.log("No recent activities found.");
