@@ -40,7 +40,7 @@ async function main() {
   printWeather(printer, weather);
   printCalendar(printer, events);
   printTodos(printer, todos);
-  printNews(printer, headlines);
+  await printNews(printer, headlines);
 
   printer.lineFeed(2);
   printer.alignCenter();

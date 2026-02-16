@@ -233,7 +233,8 @@ class Printer {
         out.push(`| ${line} |`);
       }
       out.push(border);
-      out.push("  \\/ \\/ \\/ \\/ \\/ \\/ \\/ \\/");
+      const edge = ("\\/  ").repeat(11).trimEnd();
+      out.push(" " + edge);
       process.stdout.write(out.join("\n") + "\n");
       this._lines = [];
     } else {

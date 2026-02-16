@@ -14,7 +14,11 @@ async function fetchHackerNews() {
       );
       if (!r.ok) return null;
       const item = await r.json();
-      return item?.title || null;
+      if (!item?.title) return null;
+      return {
+        title: item.title,
+        url: item.url || `https://news.ycombinator.com/item?id=${id}`,
+      };
     })
   );
 
@@ -27,23 +31,28 @@ async function fetchVerge() {
   if (!res.ok) return [];
 
   const xml = await res.text();
-  const titles = [];
-  const regex = /<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/g;
-  let match;
-  // Skip the first match (feed title)
-  regex.exec(xml);
-  while ((match = regex.exec(xml)) !== null && titles.length < 5) {
-    const title = match[1]
-      .replace(/<!\[CDATA\[|\]\]>/g, "")
-      .replace(/&amp;/g, "&")
-      .replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">")
-      .replace(/&#39;/g, "'")
-      .replace(/&quot;/g, '"')
-      .trim();
-    if (title) titles.push(title);
+  const items = [];
+  // Match each <entry> block to extract title and link together
+  const entryRegex = /<entry>([\s\S]*?)<\/entry>/g;
+  let entryMatch;
+  while ((entryMatch = entryRegex.exec(xml)) !== null && items.length < 5) {
+    const entry = entryMatch[1];
+    const titleMatch = entry.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/);
+    const linkMatch = entry.match(/<link[^>]+href="([^"]+)"/);
+    const title = titleMatch
+      ? titleMatch[1]
+          .replace(/<!\[CDATA\[|\]\]>/g, "")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&#39;/g, "'")
+          .replace(/&quot;/g, '"')
+          .trim()
+      : null;
+    const url = linkMatch ? linkMatch[1] : null;
+    if (title) items.push({ title, url });
   }
-  return titles;
+  return items;
 }
 
 async function fetchNews() {
@@ -55,27 +64,37 @@ async function fetchNews() {
   return { hn, verge };
 }
 
-function printNews(printer, news) {
+async function printNews(printer, news) {
+  const { renderQrBitmap } = require("../../utils/qr");
+
   if (!news) {
     printer.printSectionTitle("NEWS");
     printer.printLine("  News unavailable.");
     return;
   }
 
+  async function printArticles(items) {
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      printer.printWrapped(`  ${i + 1}. ${item.title}`, 40);
+      if (item.url) {
+        const qr = await renderQrBitmap(item.url, 2);
+        printer.alignCenter();
+        printer.printImage(qr);
+        printer.alignLeft();
+      }
+      if (i < items.length - 1) printer.printLine();
+    }
+  }
+
   if (news.hn.length > 0) {
     printer.printSectionTitle("HACKER NEWS");
-    news.hn.forEach((headline, i) => {
-      printer.printWrapped(`  ${i + 1}. ${headline}`, 40);
-      if (i < news.hn.length - 1) printer.printLine();
-    });
+    await printArticles(news.hn);
   }
 
   if (news.verge.length > 0) {
     printer.printSectionTitle("THE VERGE");
-    news.verge.forEach((headline, i) => {
-      printer.printWrapped(`  ${i + 1}. ${headline}`, 40);
-      if (i < news.verge.length - 1) printer.printLine();
-    });
+    await printArticles(news.verge);
   }
 
   if (news.hn.length === 0 && news.verge.length === 0) {
