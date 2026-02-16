@@ -23,7 +23,7 @@ const CMD = {
   LINE_FEED: Buffer.from([0x0a]),
 };
 
-const PAPER_WIDTH = 42; // characters at normal size
+const PAPER_WIDTH = 48; // characters at normal size
 
 // Replace common Unicode characters with ASCII equivalents
 // and strip anything else non-ASCII
