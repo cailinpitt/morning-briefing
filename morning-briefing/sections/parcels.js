@@ -10,23 +10,34 @@ const STATUS_LABELS = {
   8: "Info Received",
 };
 
+async function fetchCarrierNames() {
+  const res = await fetch("https://api.parcel.app/external/supported_carriers.json");
+  if (!res.ok) return {};
+  const carriers = await res.json();
+  const map = {};
+  for (const c of carriers) map[c.code] = c.name;
+  return map;
+}
+
 async function fetchParcels() {
   const key = process.env.PARCEL_API_KEY;
   if (!key || key === "your_key_here") return null;
 
-  const res = await fetch(
-    "https://api.parcel.app/external/deliveries/?filter_mode=active",
-    { headers: { "api-key": key } }
-  );
+  const [deliveryRes, carrierNames] = await Promise.all([
+    fetch("https://api.parcel.app/external/deliveries/?filter_mode=active", {
+      headers: { "api-key": key },
+    }),
+    fetchCarrierNames().catch(() => ({})),
+  ]);
 
-  if (!res.ok) {
-    console.error(`Parcel API error: ${res.status} ${res.statusText}`);
-    const body = await res.text().catch(() => "");
+  if (!deliveryRes.ok) {
+    console.error(`Parcel API error: ${deliveryRes.status} ${deliveryRes.statusText}`);
+    const body = await deliveryRes.text().catch(() => "");
     if (body) console.error(body);
     return null;
   }
 
-  const data = await res.json();
+  const data = await deliveryRes.json();
   if (!data.success) {
     console.error(`Parcel API error: ${data.error_message}`);
     return null;
@@ -41,7 +52,7 @@ async function fetchParcels() {
     latestEvent: d.events && d.events.length > 0 ? d.events[0].event : null,
     latestLocation: d.events && d.events.length > 0 ? d.events[0].location : null,
     latestEventDate: d.events && d.events.length > 0 ? new Date(d.events[0].date).toDateString() : null,
-    carrierCode: d.carrier_code,
+    carrier: carrierNames[d.carrier_code] || d.carrier_code,
   }));
 }
 
@@ -71,7 +82,7 @@ function printParcels(printer, parcels) {
 
   for (const parcel of parcels) {
     printer.bold(true);
-    printer.printWrapped(`  ${parcel.description} (${parcel.carrierCode})`, 40);
+    printer.printWrapped(`  ${parcel.description} (${parcel.carrier})`, 40);
     printer.bold(false);
 
     let detail = `  ${parcel.status}`;
