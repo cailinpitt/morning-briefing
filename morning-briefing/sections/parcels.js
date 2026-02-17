@@ -13,10 +13,7 @@ const STATUS_LABELS = {
 async function fetchCarrierNames() {
   const res = await fetch("https://api.parcel.app/external/supported_carriers.json");
   if (!res.ok) return {};
-  const carriers = await res.json();
-  const map = {};
-  for (const c of carriers) map[c.code] = c.name;
-  return map;
+  return res.json();
 }
 
 async function fetchParcels() {

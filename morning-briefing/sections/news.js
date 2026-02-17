@@ -55,13 +55,42 @@ async function fetchVerge() {
   return items;
 }
 
+async function fetchArs() {
+  const res = await fetch("https://feeds.arstechnica.com/arstechnica/index");
+  if (!res.ok) return [];
+
+  const xml = await res.text();
+  const items = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/g;
+  let match;
+  while ((match = itemRegex.exec(xml)) !== null && items.length < 5) {
+    const entry = match[1];
+    const titleMatch = entry.match(/<title(?:\s[^>]*)?>([\s\S]*?)<\/title>/);
+    const linkMatch = entry.match(/<link(?:\s[^>]*)?>([\s\S]*?)<\/link>/);
+    const title = titleMatch
+      ? titleMatch[1]
+          .replace(/<!\[CDATA\[|\]\]>/g, "")
+          .replace(/&amp;/g, "&")
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
+          .replace(/&#39;/g, "'")
+          .replace(/&quot;/g, '"')
+          .trim()
+      : null;
+    const url = linkMatch ? linkMatch[1].trim() : null;
+    if (title) items.push({ title, url });
+  }
+  return items;
+}
+
 async function fetchNews() {
-  const [hn, verge] = await Promise.all([
+  const [hn, verge, ars] = await Promise.all([
     fetchHackerNews().catch(() => []),
     fetchVerge().catch(() => []),
+    fetchArs().catch(() => []),
   ]);
 
-  return { hn, verge };
+  return { hn, verge, ars };
 }
 
 async function printNews(printer, news) {
@@ -89,7 +118,12 @@ async function printNews(printer, news) {
     await printArticles(news.verge);
   }
 
-  if (news.hn.length === 0 && news.verge.length === 0) {
+  if (news.ars.length > 0) {
+    printer.printSectionTitle("ARS TECHNICA");
+    await printArticles(news.ars);
+  }
+
+  if (news.hn.length === 0 && news.verge.length === 0 && news.ars.length === 0) {
     printer.printSectionTitle("NEWS");
     printer.printLine("  No headlines available.");
   }
