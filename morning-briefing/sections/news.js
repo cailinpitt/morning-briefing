@@ -65,8 +65,6 @@ async function fetchNews() {
 }
 
 async function printNews(printer, news) {
-  const { renderQrBitmap } = require("../../utils/qr");
-
   if (!news) {
     printer.printSectionTitle("NEWS");
     printer.printLine("  News unavailable.");
@@ -77,12 +75,6 @@ async function printNews(printer, news) {
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       printer.printWrapped(`  ${i + 1}. ${item.title}`, 40);
-      if (item.url) {
-        const qr = await renderQrBitmap(item.url, 2);
-        printer.alignCenter();
-        printer.printImage(qr);
-        printer.alignLeft();
-      }
       if (i < items.length - 1) printer.printLine();
     }
   }
