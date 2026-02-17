@@ -1,4 +1,5 @@
 const fs = require("fs");
+const { execFileSync } = require("child_process");
 
 // ESC/POS command constants
 const ESC = 0x1b;
@@ -239,7 +240,15 @@ class Printer {
       this._lines = [];
     } else {
       const output = Buffer.concat(this.buffer);
-      fs.writeFileSync(this.devicePath, output);
+      if (this.devicePath.startsWith("ssh://")) {
+        // ssh://user@host/dev/usb/lp0
+        const match = this.devicePath.match(/^ssh:\/\/([^/]+)(\/.*)/);
+        if (!match) throw new Error(`Invalid SSH device path: ${this.devicePath}`);
+        const [, host, remotePath] = match;
+        execFileSync("ssh", [host, `cat > ${remotePath}`], { input: output });
+      } else {
+        fs.writeFileSync(this.devicePath, output);
+      }
     }
     this.buffer = [];
   }

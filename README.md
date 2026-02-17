@@ -2,6 +2,21 @@
 
 Receipt printer scripts for Epson TM-T20III. Runs on a Raspberry Pi.
 
+### Remote printing
+
+To develop on your Mac and print to a Pi on the same network, set `PRINTER_DEVICE` to an SSH path:
+
+```
+PRINTER_DEVICE=ssh://user@hostname/dev/usb/lp0
+```
+
+Set up passwordless SSH so you don't have to enter your password each time:
+
+```
+ssh-keygen                       # if you don't have a key yet
+ssh-copy-id user@hostname        # copies your key to the Pi
+```
+
 ## Setup
 
 ```
