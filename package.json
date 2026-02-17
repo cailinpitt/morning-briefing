@@ -12,6 +12,10 @@
     "strava:auth": "node strava-briefing/auth.js",
     "lastfm": "node lastfm-briefing/index.js",
     "lastfm:test": "node lastfm-briefing/index.js --test",
+    "lastfm:weekly": "node lastfm-briefing/index.js",
+    "lastfm:weekly:test": "node lastfm-briefing/index.js --test",
+    "lastfm:monthly": "node lastfm-briefing/monthly.js",
+    "lastfm:monthly:test": "node lastfm-briefing/monthly.js --test",
     "spotify:auth": "node lastfm-briefing/auth-spotify.js"
   },
   "dependencies": {

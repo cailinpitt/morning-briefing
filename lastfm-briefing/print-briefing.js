@@ -1,12 +1,11 @@
 const { PAPER_WIDTH } = require("../printer");
-const { renderQrBitmap } = require("../utils/qr");
 
-function formatDateRange() {
+function formatDateRange(days = 7) {
   const now = new Date();
-  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const start = new Date(now - days * 24 * 60 * 60 * 1000);
   const fmt = (d) =>
     d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  return `${fmt(weekAgo)} - ${fmt(now)}`;
+  return `${fmt(start)} - ${fmt(now)}`;
 }
 
 function leaderLine(label, value) {
@@ -31,6 +30,11 @@ function aggregateGenres(artistTags) {
 
 async function printBriefing(printer, data) {
   const { scrobbles, topArtists, topAlbums, topTracks, artistTags, recommendations, spotify } = data;
+  const title = data.title || "WEEKLY REPORT";
+  const days = data.days || 7;
+  const periodLabel = days <= 7 ? "last week" : "last month";
+  const currentLabel = days <= 7 ? "thisWeek" : "thisMonth";
+  const previousLabel = days <= 7 ? "lastWeek" : "lastMonth";
 
   // Header
   printer.alignCenter();
@@ -38,9 +42,9 @@ async function printBriefing(printer, data) {
   printer.sizeDoubleWidth();
   printer.printLine("LAST.FM");
   printer.sizeNormal();
-  printer.printLine("WEEKLY REPORT");
+  printer.printLine(title);
   printer.bold(false);
-  printer.printLine(formatDateRange());
+  printer.printLine(formatDateRange(days));
   printer.alignLeft();
 
   // Total scrobbles
@@ -48,14 +52,14 @@ async function printBriefing(printer, data) {
   printer.alignCenter();
   printer.sizeDouble();
   printer.bold(true);
-  printer.printLine(String(scrobbles.thisWeek));
+  printer.printLine(String(scrobbles[currentLabel]));
   printer.sizeNormal();
   printer.bold(false);
-  if (scrobbles.lastWeek > 0) {
-    const diff = scrobbles.thisWeek - scrobbles.lastWeek;
-    const pct = Math.round((diff / scrobbles.lastWeek) * 100);
+  if (scrobbles[previousLabel] > 0) {
+    const diff = scrobbles[currentLabel] - scrobbles[previousLabel];
+    const pct = Math.round((diff / scrobbles[previousLabel]) * 100);
     const sign = pct >= 0 ? "+" : "";
-    printer.printLine(`${sign}${pct}% from last week (${scrobbles.lastWeek})`);
+    printer.printLine(`${sign}${pct}% from ${periodLabel} (${scrobbles[previousLabel]})`);
   }
   printer.alignLeft();
 
@@ -134,13 +138,6 @@ async function printBriefing(printer, data) {
     }
   }
 
-  // Footer QR
-  printer.lineFeed(1);
-  printer.alignCenter();
-  const username = process.env.LASTFM_USERNAME;
-  const qr = await renderQrBitmap(`https://www.last.fm/user/${username}`);
-  printer.printImage(qr);
-  printer.alignLeft();
   printer.feedAndCut();
 }
 

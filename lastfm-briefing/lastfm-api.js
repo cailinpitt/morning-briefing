@@ -36,11 +36,22 @@ async function fetchWeeklyScrobbleCounts() {
   return { thisWeek, lastWeek };
 }
 
-async function fetchTopArtists(limit = 5) {
+async function fetchMonthlyScrobbleCounts() {
+  const now = Math.floor(Date.now() / 1000);
+  const monthAgo = now - 30 * 24 * 60 * 60;
+  const twoMonthsAgo = now - 60 * 24 * 60 * 60;
+  const [thisMonth, lastMonth] = await Promise.all([
+    fetchScrobbleCount(monthAgo, now),
+    fetchScrobbleCount(twoMonthsAgo, monthAgo),
+  ]);
+  return { thisMonth, lastMonth };
+}
+
+async function fetchTopArtists(limit = 5, period = "7day") {
   const data = await apiCall({
     method: "user.getTopArtists",
     user: USERNAME,
-    period: "7day",
+    period,
     limit,
   });
   return data.topartists.artist.map((a) => ({
@@ -49,11 +60,11 @@ async function fetchTopArtists(limit = 5) {
   }));
 }
 
-async function fetchTopAlbums(limit = 5) {
+async function fetchTopAlbums(limit = 5, period = "7day") {
   const data = await apiCall({
     method: "user.getTopAlbums",
     user: USERNAME,
-    period: "7day",
+    period,
     limit,
   });
   return data.topalbums.album.map((a) => ({
@@ -63,11 +74,11 @@ async function fetchTopAlbums(limit = 5) {
   }));
 }
 
-async function fetchTopTracks(limit = 5) {
+async function fetchTopTracks(limit = 5, period = "7day") {
   const data = await apiCall({
     method: "user.getTopTracks",
     user: USERNAME,
-    period: "7day",
+    period,
     limit,
   });
   return data.toptracks.track.map((t) => ({
@@ -113,6 +124,7 @@ async function fetchArtistTags(artist) {
 
 module.exports = {
   fetchWeeklyScrobbleCounts,
+  fetchMonthlyScrobbleCounts,
   fetchTopArtists,
   fetchTopAlbums,
   fetchTopTracks,

@@ -160,7 +160,7 @@ On first run, it prints the most recent activity and marks the rest as seen. Sub
 |                   RIDE                     |
 |           Sun, Feb 15, 11:41 AM            |
 |                                            |
-| Top 10 "never kill yourself" days          |
+| Morning Ride                               |
 | ------------------------------------------ |
 | Distance ......................... 27.9 mi |
 | Moving Time ........................ 2h 2m |
@@ -217,8 +217,10 @@ If Spotify is not configured, the briefing still prints normally without it.
 ### Run
 
 ```
-npm run lastfm           # print to receipt printer
-npm run lastfm:test      # ASCII output to terminal
+npm run lastfm:weekly        # print weekly report (top 5, 7 days)
+npm run lastfm:weekly:test   # ASCII output to terminal
+npm run lastfm:monthly       # print monthly report (top 10, 30 days)
+npm run lastfm:monthly:test  # ASCII output to terminal
 ```
 
 ### Example output
@@ -276,7 +278,6 @@ npm run lastfm:test      # ASCII output to terminal
 |    via Famous                              |
 | Added 2 to Need to listen! playlist.      |
 |                                            |
-|                 [QR code]                  |
 |                                            |
 +--------------------------------------------+
  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/
