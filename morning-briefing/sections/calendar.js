@@ -43,23 +43,45 @@ function normalizeStreet(name) {
     .trim();
 }
 
-function buildBikeSummary(directions) {
+function buildDirectionsSummary(directions) {
   if (!directions?.length) return null;
   // Merge consecutive segments on the same street
   const merged = [];
   for (const d of directions) {
-    const raw = (d.way_name || "").trim();
+    const raw = (d.way_name || d.name || "").trim();
     if (!raw) continue;
     const name = normalizeStreet(raw);
     const last = merged[merged.length - 1];
     if (last && last.name === name) {
-      last.distance += d.length;
+      last.distance += d.length || d.distance || 0;
     } else {
-      merged.push({ name, distance: d.length });
+      merged.push({ name, distance: d.length || d.distance || 0 });
     }
   }
   if (!merged.length) return null;
   return merged.map((s) => s.name).join(" > ");
+}
+
+async function fetchDrivePlan(toLat, toLon) {
+  const homeLat = process.env.HOME_LAT;
+  const homeLon = process.env.HOME_LON;
+  if (!homeLat || !homeLon) return null;
+
+  const url = `https://router.project-osrm.org/route/v1/driving/${homeLon},${homeLat};${toLon},${toLat}?overview=false&steps=true`;
+  const res = await fetch(url);
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const route = data.routes?.[0];
+  if (!route) return null;
+
+  const mins = Math.round(route.duration / 60);
+  let summary = `Drive ${mins} min`;
+  const steps = route.legs?.flatMap((l) => l.steps) || [];
+  const directions = buildDirectionsSummary(steps);
+  if (directions) summary += ": " + directions;
+
+  return { travelMinutes: mins, transitSummary: summary };
 }
 
 async function fetchTransitPlan(toLat, toLon, mode = "transit") {
@@ -75,7 +97,7 @@ async function fetchTransitPlan(toLat, toLon, mode = "transit") {
   url.searchParams.set("to_lon", toLon);
   url.searchParams.set("mode", mode);
   url.searchParams.set("num_result", "1");
-  if (mode === "personal_bike") {
+  if (mode === "personal_bike" || mode === "walk") {
     url.searchParams.set("should_include_directions", "true");
   }
 
@@ -90,8 +112,8 @@ async function fetchTransitPlan(toLat, toLon, mode = "transit") {
 
   const legs = result.legs || [];
   let summary = buildLegSummary(legs);
-  if (mode === "personal_bike" && legs[0]?.directions) {
-    const route = buildBikeSummary(legs[0].directions);
+  if ((mode === "personal_bike" || mode === "walk") && legs[0]?.directions) {
+    const route = buildDirectionsSummary(legs[0].directions);
     if (route) summary += ": " + route;
   }
 
@@ -106,8 +128,13 @@ async function addTravelInfo(event) {
   try {
     const coords = await geocode(event.location);
     if (!coords) return;
-    const mode = event.bike ? "personal_bike" : "transit";
-    const plan = await fetchTransitPlan(coords.lat, coords.lon, mode);
+    let plan;
+    if (event.travelMode === "drive") {
+      plan = await fetchDrivePlan(coords.lat, coords.lon);
+    } else {
+      const mode = { bike: "personal_bike", walk: "walk" }[event.travelMode] || "transit";
+      plan = await fetchTransitPlan(coords.lat, coords.lon, mode);
+    }
     if (!plan) return;
     event.travelMinutes = plan.travelMinutes;
     event.transitSummary = plan.transitSummary;
@@ -157,12 +184,21 @@ async function fetchCalendarEvents() {
       });
     }
     const desc = event.description || "";
+    const modeMatch = desc.match(/\[(bike|walk|drive)\]/i);
+    let venueName = null;
+    if (event.location) {
+      const firstPart = event.location.split(",")[0].trim();
+      if (firstPart && !/^\d/.test(firstPart)) {
+        venueName = firstPart;
+      }
+    }
     return {
       time: timeStr,
       startDateTime: event.start.dateTime || null,
       title: event.summary || "(No title)",
       location: event.location || null,
-      bike: /\[bike\]/i.test(desc),
+      venueName,
+      travelMode: modeMatch ? modeMatch[1].toLowerCase() : null,
     };
   });
 
@@ -188,7 +224,11 @@ function printCalendar(printer, events) {
     printer.bold(true);
     printer.printLine(`  ${event.time}`);
     printer.bold(false);
-    printer.printWrapped(`    ${event.title}`, 40);
+    if (event.venueName) {
+      printer.printWrapped(`    ${event.title} at ${event.venueName}`, 40);
+    } else {
+      printer.printWrapped(`    ${event.title}`, 40);
+    }
     if (event.travelMinutes != null) {
       let leaveBy = "";
       if (event.startDateTime) {

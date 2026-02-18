@@ -45,7 +45,7 @@ async function fetchVerge() {
           .replace(/&amp;/g, "&")
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
-          .replace(/&#39;/g, "'")
+          .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
           .replace(/&quot;/g, '"')
           .trim()
       : null;
@@ -73,7 +73,7 @@ async function fetchArs() {
           .replace(/&amp;/g, "&")
           .replace(/&lt;/g, "<")
           .replace(/&gt;/g, ">")
-          .replace(/&#39;/g, "'")
+          .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
           .replace(/&quot;/g, '"')
           .trim()
       : null;
