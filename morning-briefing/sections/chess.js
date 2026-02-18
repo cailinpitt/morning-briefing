@@ -2,6 +2,20 @@ const HEADERS = {
   "User-Agent": `morning-briefing/1.0 (username: ${process.env.CHESS_USERNAME})`,
 };
 
+function gameDuration(game) {
+  const startMatch = game.pgn?.match(/\[StartTime "(.+?)"\]/);
+  const endMatch = game.pgn?.match(/\[EndTime "(.+?)"\]/);
+  const dateMatch = game.pgn?.match(/\[UTCDate "(.+?)"\]/);
+  const endDateMatch = game.pgn?.match(/\[EndDate "(.+?)"\]/);
+  if (!startMatch || !endMatch || !dateMatch) return 0;
+  const date = dateMatch[1].replace(/\./g, "-");
+  const endDate = (endDateMatch ? endDateMatch[1] : dateMatch[1]).replace(/\./g, "-");
+  const start = new Date(`${date}T${startMatch[1]}Z`);
+  const end = new Date(`${endDate}T${endMatch[1]}Z`);
+  const seconds = (end - start) / 1000;
+  return seconds > 0 ? seconds : 0;
+}
+
 async function fetchChess() {
   const username = process.env.CHESS_USERNAME;
   if (!username) return null;
@@ -18,13 +32,14 @@ async function fetchChess() {
   const { games, prevRating } = gamesRes;
   const ratingChange = blitz && prevRating ? blitz - prevRating : null;
 
-  let wins = 0, losses = 0, draws = 0;
+  let wins = 0, losses = 0, draws = 0, totalSeconds = 0;
   for (const g of games) {
     const isWhite = g.white.username.toLowerCase() === username;
     const result = isWhite ? g.white.result : g.black.result;
     if (result === "win") wins++;
     else if (["draw", "stalemate", "repetition", "agreed", "insufficient", "timevsinsufficient", "50move"].includes(result)) draws++;
     else losses++;
+    totalSeconds += gameDuration(g);
   }
 
   return {
@@ -34,6 +49,7 @@ async function fetchChess() {
     wins,
     losses,
     draws,
+    playMinutes: Math.round(totalSeconds / 60),
   };
 }
 
@@ -120,7 +136,15 @@ function printChess(printer, chess) {
 
   if (chess.gamesPlayed > 0) {
     printer.printLine("");
-    printer.printLine(`  Yesterday: ${chess.gamesPlayed} games`);
+    let timePlayed = "";
+    if (chess.playMinutes >= 60) {
+      const hrs = Math.floor(chess.playMinutes / 60);
+      const mins = chess.playMinutes % 60;
+      timePlayed = mins > 0 ? ` (${hrs}h ${mins}m)` : ` (${hrs}h)`;
+    } else if (chess.playMinutes > 0) {
+      timePlayed = ` (${chess.playMinutes}m)`;
+    }
+    printer.printLine(`  Yesterday: ${chess.gamesPlayed} games${timePlayed}`);
     printer.printLine(`  W: ${chess.wins}  L: ${chess.losses}  D: ${chess.draws}`);
   } else {
     printer.printLine("");
