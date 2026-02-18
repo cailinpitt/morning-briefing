@@ -21,6 +21,9 @@ function buildLegSummary(legs) {
       if (leg.leg_mode === "walk") {
         return `Walk ${mins} min`;
       }
+      if (leg.leg_mode === "personal_bike") {
+        return `Bike ${mins} min`;
+      }
       const route = leg.routes?.[0];
       if (!route) return "Transit";
       const short = route.route_short_name || route.route_long_name;
@@ -33,7 +36,33 @@ function buildLegSummary(legs) {
     .join(" > ");
 }
 
-async function fetchTransitPlan(toLat, toLon) {
+function normalizeStreet(name) {
+  return name
+    .replace(/ Bikeway$/, "")
+    .replace(/^(North|South|East|West) /, "")
+    .trim();
+}
+
+function buildBikeSummary(directions) {
+  if (!directions?.length) return null;
+  // Merge consecutive segments on the same street
+  const merged = [];
+  for (const d of directions) {
+    const raw = (d.way_name || "").trim();
+    if (!raw) continue;
+    const name = normalizeStreet(raw);
+    const last = merged[merged.length - 1];
+    if (last && last.name === name) {
+      last.distance += d.length;
+    } else {
+      merged.push({ name, distance: d.length });
+    }
+  }
+  if (!merged.length) return null;
+  return merged.map((s) => s.name).join(" > ");
+}
+
+async function fetchTransitPlan(toLat, toLon, mode = "transit") {
   const apiKey = process.env.TRANSIT_API_KEY;
   const homeLat = process.env.HOME_LAT;
   const homeLon = process.env.HOME_LON;
@@ -44,8 +73,11 @@ async function fetchTransitPlan(toLat, toLon) {
   url.searchParams.set("from_lon", homeLon);
   url.searchParams.set("to_lat", toLat);
   url.searchParams.set("to_lon", toLon);
-  url.searchParams.set("mode", "transit");
+  url.searchParams.set("mode", mode);
   url.searchParams.set("num_result", "1");
+  if (mode === "personal_bike") {
+    url.searchParams.set("should_include_directions", "true");
+  }
 
   const res = await fetch(url, {
     headers: { apiKey },
@@ -56,9 +88,16 @@ async function fetchTransitPlan(toLat, toLon) {
   const result = data.results?.[0];
   if (!result) return null;
 
+  const legs = result.legs || [];
+  let summary = buildLegSummary(legs);
+  if (mode === "personal_bike" && legs[0]?.directions) {
+    const route = buildBikeSummary(legs[0].directions);
+    if (route) summary += ": " + route;
+  }
+
   return {
     travelMinutes: Math.round(result.duration / 60),
-    transitSummary: buildLegSummary(result.legs || []),
+    transitSummary: summary,
   };
 }
 
@@ -67,7 +106,8 @@ async function addTravelInfo(event) {
   try {
     const coords = await geocode(event.location);
     if (!coords) return;
-    const plan = await fetchTransitPlan(coords.lat, coords.lon);
+    const mode = event.bike ? "personal_bike" : "transit";
+    const plan = await fetchTransitPlan(coords.lat, coords.lon, mode);
     if (!plan) return;
     event.travelMinutes = plan.travelMinutes;
     event.transitSummary = plan.transitSummary;
@@ -111,11 +151,13 @@ async function fetchCalendarEvents() {
         minute: "2-digit",
       });
     }
+    const desc = event.description || "";
     return {
       time: timeStr,
       startDateTime: event.start.dateTime || null,
       title: event.summary || "(No title)",
       location: event.location || null,
+      bike: /\[bike\]/i.test(desc),
     };
   });
 
@@ -149,7 +191,7 @@ function printCalendar(printer, events) {
         leaveBy = ` (leave ${leave.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })})`;
       }
       printer.printWrapped(
-        `    * ${event.travelMinutes} min${leaveBy}: ${event.transitSummary}`,
+        `      ${event.travelMinutes} min${leaveBy}: ${event.transitSummary}`,
         40,
       );
     }

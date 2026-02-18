@@ -66,7 +66,7 @@ SPOTIFY_PLAYLIST_ID=
 Prints weather, calendar events, todos, news headlines, and active parcel shipments.
 
 - **Weather** includes sunrise/sunset, hourly forecast at 9 AM / 12 PM / 3 PM / 6 PM / 9 PM, and weather alerts when active
-- **Calendar** events with locations show transit travel times and directions from home (via Transit App API + Nominatim geocoding), with a "leave by" time
+- **Calendar** events with locations show transit travel times and directions from home (via Transit App API + Nominatim geocoding), with a "leave by" time. Add `[bike]` to a Google Calendar event's description to get bike directions with a street-by-street route instead of transit
 
 ### Auth
 
@@ -115,11 +115,16 @@ npm run morning:test     # ASCII output to terminal
 |                                            |
 | CALENDAR                                   |
 | ------------------------------------------ |
+|   10:00 AM                                 |
+|     Brunch                                 |
+|       25 min (leave 9:35 AM): Bike 25      |
+|       min: Elm Street > Lake Avenue >      |
+|       Broadway > Main Street               |
 |   8:30 PM                                  |
 |     Jazz at Lincoln Center                 |
-|     * 42 min (leave 7:48 PM): Walk 5       |
-|     min > 72 Bus to Clark > Brown Line     |
-|     to Kimball > Walk 3 min                |
+|       42 min (leave 7:48 PM): Walk 5       |
+|       min > 22 Bus to Clark > Red Line     |
+|       to Howard > Walk 3 min               |
 |                                            |
 | TODAY'S TASKS                              |
 | ------------------------------------------ |
