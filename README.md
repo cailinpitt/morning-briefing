@@ -63,7 +63,10 @@ SPOTIFY_PLAYLIST_ID=
 
 ## Morning briefing
 
-Prints weather, calendar events, todos, news headlines, and active parcel shipments. Events with locations show estimated transit travel times from home.
+Prints weather, calendar events, todos, news headlines, and active parcel shipments.
+
+- **Weather** includes sunrise/sunset, hourly forecast at 9 AM / 12 PM / 3 PM / 6 PM / 9 PM, and weather alerts when active
+- **Calendar** events with locations show transit travel times and directions from home (via Transit App API + Nominatim geocoding), with a "leave by" time
 
 ### Auth
 
@@ -92,7 +95,7 @@ npm run morning:test     # ASCII output to terminal
 |                                            |
 |              DAILY BRIEFING                |
 |                                            |
-|           SUNDAY, FEB 15, 2026             |
+|           MONDAY, FEB 16, 2026             |
 |               Good morning!                |
 |                                            |
 | ****************************************** |
@@ -102,12 +105,21 @@ npm run morning:test     # ASCII output to terminal
 |   44F                                      |
 |   clear sky                                |
 |   High: 45F  Low: 38F                      |
-|   Sunset: 5:23 PM                          |
+|   Sunrise: 6:44 AM  Sunset: 5:23 PM        |
+|                                            |
+|    9 AM   48F  sunny                       |
+|   12 PM   52F  cloudy                      |
+|    3 PM   50F  rainy                       |
+|    6 PM   45F  cloudy                      |
+|    9 PM   42F  sunny                       |
 |                                            |
 | CALENDAR                                   |
 | ------------------------------------------ |
 |   8:30 PM                                  |
-|     Jazz                                   |
+|     Jazz at Lincoln Center                 |
+|     * 42 min (leave 7:48 PM): Walk 5       |
+|     min > 72 Bus to Clark > Brown Line     |
+|     to Kimball > Walk 3 min                |
 |                                            |
 | TODAY'S TASKS                              |
 | ------------------------------------------ |
