@@ -42,6 +42,7 @@ PARCEL_API_KEY=
 TRANSIT_API_KEY=
 HOME_LAT=
 HOME_LON=
+CHESS_USERNAME=
 
 # Strava briefing
 STRAVA_CLIENT_ID=
@@ -63,10 +64,14 @@ SPOTIFY_PLAYLIST_ID=
 
 ## Morning briefing
 
-Prints weather, calendar events, todos, news headlines, and active parcel shipments.
+Prints weather, calendar events, chess stats, todos, news headlines, and active parcel shipments.
 
 - **Weather** includes sunrise/sunset, hourly forecast at 9 AM / 12 PM / 3 PM / 6 PM / 9 PM, and weather alerts when active
-- **Calendar** events with locations show transit travel times and directions from home (via Transit App API + Nominatim geocoding), with a "leave by" time. Add `[bike]` to a Google Calendar event's description to get bike directions with a street-by-street route instead of transit
+- **Calendar** events with locations show travel times and directions from home with a "leave by" time. Defaults to transit directions (via Transit App API + Nominatim geocoding). Add a tag to the Google Calendar event description to change the travel mode:
+  - `[bike]` — bike directions with street-by-street route
+  - `[walk]` — walking directions with street-by-street route
+  - `[drive]` — driving directions via OSRM (no API key needed)
+- **Chess.com** shows current blitz rating with daily change, yesterday's game count and W/L/D record. No API key needed, just set `CHESS_USERNAME`
 
 ### Auth
 
@@ -120,11 +125,24 @@ npm run morning:test     # ASCII output to terminal
 |       25 min (leave 9:35 AM): Bike 25      |
 |       min: Elm Street > Lake Avenue >      |
 |       Broadway > Main Street               |
+|   5:00 PM                                  |
+|     Dinner                                 |
+|       12 min (leave 4:48 PM): Drive 12     |
+|       min: Oak Street > Lake Shore         |
+|       Drive > Michigan Avenue              |
 |   8:30 PM                                  |
 |     Jazz at Lincoln Center                 |
 |       42 min (leave 7:48 PM): Walk 5       |
 |       min > 22 Bus to Clark > Red Line     |
 |       to Howard > Walk 3 min               |
+|                                            |
+| CHESS.COM                                  |
+| ------------------------------------------ |
+|   1009 (+33)                               |
+|   Blitz rating                             |
+|                                            |
+|   Yesterday: 23 games                      |
+|   W: 13  L: 9  D: 1                        |
 |                                            |
 | TODAY'S TASKS                              |
 | ------------------------------------------ |
