@@ -142,7 +142,12 @@ async function fetchCalendarEvents() {
     orderBy: "startTime",
   });
 
-  const events = (res.data.items || []).map((event) => {
+  const accepted = (res.data.items || []).filter((event) => {
+    const self = event.attendees?.find((a) => a.self);
+    return !self || self.responseStatus === "accepted" || self.responseStatus === "tentative";
+  });
+
+  const events = accepted.map((event) => {
     const start = event.start.dateTime || event.start.date;
     let timeStr = "All day";
     if (event.start.dateTime) {
