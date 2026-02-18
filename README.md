@@ -39,6 +39,9 @@ OPENWEATHER_LAT=
 OPENWEATHER_LON=
 TODOIST_API_TOKEN=
 PARCEL_API_KEY=
+TRANSIT_API_KEY=
+HOME_LAT=
+HOME_LON=
 
 # Strava briefing
 STRAVA_CLIENT_ID=
@@ -60,7 +63,7 @@ SPOTIFY_PLAYLIST_ID=
 
 ## Morning briefing
 
-Prints weather, calendar events, todos, news headlines, and active parcel shipments.
+Prints weather, calendar events, todos, news headlines, and active parcel shipments. Events with locations show estimated transit travel times from home.
 
 ### Auth
 

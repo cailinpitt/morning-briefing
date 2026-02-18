@@ -1,5 +1,81 @@
 const { google } = require("googleapis");
 
+async function geocode(location) {
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+  url.searchParams.set("q", location);
+  url.searchParams.set("format", "json");
+  url.searchParams.set("limit", "1");
+
+  const res = await fetch(url, {
+    headers: { "User-Agent": "morning-briefing/1.0" },
+  });
+  const data = await res.json();
+  if (!data.length) return null;
+  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+}
+
+function buildLegSummary(legs) {
+  return legs
+    .map((leg) => {
+      const mins = Math.round(leg.duration / 60);
+      if (leg.leg_mode === "walk") {
+        return `Walk ${mins} min`;
+      }
+      const route = leg.routes?.[0];
+      if (!route) return "Transit";
+      const short = route.route_short_name || route.route_long_name;
+      let mode = route.mode_name;
+      if (mode === "'L'") mode = "Line";
+      const headsign = route.itineraries?.[0]?.headsign;
+      const label = short && mode ? `${short} ${mode}` : short || mode || "Transit";
+      return headsign ? `${label} to ${headsign}` : label;
+    })
+    .join(" > ");
+}
+
+async function fetchTransitPlan(toLat, toLon) {
+  const apiKey = process.env.TRANSIT_API_KEY;
+  const homeLat = process.env.HOME_LAT;
+  const homeLon = process.env.HOME_LON;
+  if (!apiKey || !homeLat || !homeLon) return null;
+
+  const url = new URL("https://external.transitapp.com/v3/public/plan");
+  url.searchParams.set("from_lat", homeLat);
+  url.searchParams.set("from_lon", homeLon);
+  url.searchParams.set("to_lat", toLat);
+  url.searchParams.set("to_lon", toLon);
+  url.searchParams.set("mode", "transit");
+  url.searchParams.set("num_result", "1");
+
+  const res = await fetch(url, {
+    headers: { apiKey },
+  });
+  if (!res.ok) return null;
+
+  const data = await res.json();
+  const result = data.results?.[0];
+  if (!result) return null;
+
+  return {
+    travelMinutes: Math.round(result.duration / 60),
+    transitSummary: buildLegSummary(result.legs || []),
+  };
+}
+
+async function addTravelInfo(event) {
+  if (!event.location) return;
+  try {
+    const coords = await geocode(event.location);
+    if (!coords) return;
+    const plan = await fetchTransitPlan(coords.lat, coords.lon);
+    if (!plan) return;
+    event.travelMinutes = plan.travelMinutes;
+    event.transitSummary = plan.transitSummary;
+  } catch {
+    // silently skip
+  }
+}
+
 async function fetchCalendarEvents() {
   const clientId = process.env.GOOGLE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -26,7 +102,7 @@ async function fetchCalendarEvents() {
     orderBy: "startTime",
   });
 
-  return (res.data.items || []).map((event) => {
+  const events = (res.data.items || []).map((event) => {
     const start = event.start.dateTime || event.start.date;
     let timeStr = "All day";
     if (event.start.dateTime) {
@@ -35,8 +111,17 @@ async function fetchCalendarEvents() {
         minute: "2-digit",
       });
     }
-    return { time: timeStr, title: event.summary || "(No title)" };
+    return {
+      time: timeStr,
+      startDateTime: event.start.dateTime || null,
+      title: event.summary || "(No title)",
+      location: event.location || null,
+    };
   });
+
+  await Promise.all(events.map(addTravelInfo));
+
+  return events;
 }
 
 function printCalendar(printer, events) {
@@ -57,6 +142,17 @@ function printCalendar(printer, events) {
     printer.printLine(`  ${event.time}`);
     printer.bold(false);
     printer.printWrapped(`    ${event.title}`, 40);
+    if (event.travelMinutes != null) {
+      let leaveBy = "";
+      if (event.startDateTime) {
+        const leave = new Date(new Date(event.startDateTime).getTime() - event.travelMinutes * 60000);
+        leaveBy = ` (leave ${leave.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })})`;
+      }
+      printer.printWrapped(
+        `    * ${event.travelMinutes} min${leaveBy}: ${event.transitSummary}`,
+        40,
+      );
+    }
   }
 }
 

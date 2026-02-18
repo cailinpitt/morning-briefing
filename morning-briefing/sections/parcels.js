@@ -48,7 +48,7 @@ async function fetchParcels() {
     expectedEnd: d.date_expected_end || null,
     latestEvent: d.events && d.events.length > 0 ? d.events[0].event : null,
     latestLocation: d.events && d.events.length > 0 ? d.events[0].location : null,
-    latestEventDate: d.events && d.events.length > 0 ? new Date(d.events[0].date).toDateString() : null,
+    latestEventDate: d.events?.length > 0 && d.events[0].date && !isNaN(new Date(d.events[0].date)) ? new Date(d.events[0].date).toDateString() : null,
     carrier: carrierNames[d.carrier_code] || d.carrier_code,
   }));
 }
@@ -77,7 +77,8 @@ function printParcels(printer, parcels) {
     return;
   }
 
-  for (const parcel of parcels) {
+  for (let i = 0; i < parcels.length; i++) {
+    const parcel = parcels[i];
     printer.bold(true);
     printer.printWrapped(`  ${parcel.description} (${parcel.carrier})`, 40);
     printer.bold(false);
@@ -93,6 +94,7 @@ function printParcels(printer, parcels) {
       if (parcel.latestEventDate) event += ` - ${parcel.latestEventDate}`;
       printer.printWrapped(event, 40);
     }
+    if (i < parcels.length - 1) printer.printLine("");
   }
 }
 
