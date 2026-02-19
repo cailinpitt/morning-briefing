@@ -158,17 +158,24 @@ class Printer {
   }
 
   printWrapped(text, maxWidth = PAPER_WIDTH) {
-    const words = text.split(" ");
-    let line = "";
-    for (const word of words) {
-      if (line.length + word.length + 1 > maxWidth) {
-        this.printLine(line);
-        line = word;
-      } else {
-        line = line ? line + " " + word : word;
+    const paragraphs = text.split("\n");
+    for (const paragraph of paragraphs) {
+      if (paragraph === "") {
+        this.printLine("");
+        continue;
       }
+      const words = paragraph.split(" ");
+      let line = "";
+      for (const word of words) {
+        if (line.length + word.length + 1 > maxWidth) {
+          this.printLine(line);
+          line = word;
+        } else {
+          line = line ? line + " " + word : word;
+        }
+      }
+      if (line) this.printLine(line);
     }
-    if (line) this.printLine(line);
     return this;
   }
 

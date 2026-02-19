@@ -37,7 +37,6 @@ function getStatsForActivity(activity) {
     if (activity.average_heartrate) stats.push({ label: "Avg HR", value: `${Math.round(activity.average_heartrate)} bpm` });
   } else if (type === "WeightTraining") {
     stats.push({ label: "Lifting Duration", value: formatDuration(activity.moving_time) });
-    if (activity.calories) stats.push({ label: "Calories", value: `${Math.round(activity.calories)} kcal` });
     if (activity.average_heartrate) stats.push({ label: "Avg HR", value: `${Math.round(activity.average_heartrate)} bpm` });
   } else if (type === "Walk" || type === "Hike") {
     stats.push({ label: "Distance", value: formatDistance(activity.distance) });
@@ -67,6 +66,8 @@ function getStatsForActivity(activity) {
     const kudosValue = activity.kudos_count == 1 ? `${activity.kudos_count} like` : `${activity.kudos_count} likes`
     stats.push({ label: "Kudos", value: kudosValue });
   }
+
+  if (activity.calories) stats.push({ label: "Calories", value: `${activity.calories} kcal` });
 
   return stats;
 }
