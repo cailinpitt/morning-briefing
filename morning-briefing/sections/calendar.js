@@ -1,17 +1,29 @@
 const { google } = require("googleapis");
 
 async function geocode(location) {
-  const url = new URL("https://nominatim.openstreetmap.org/search");
-  url.searchParams.set("q", location);
-  url.searchParams.set("format", "json");
-  url.searchParams.set("limit", "1");
+  const queries = [location];
+  // Google Calendar locations often start with a venue name before the street address.
+  // Nominatim can't geocode venue names, so also try stripping the first comma-separated part.
+  const parts = location.split(",").map((s) => s.trim());
+  if (parts.length > 2 && !/^\d/.test(parts[0])) {
+    queries.push(parts.slice(1).join(", "));
+  }
 
-  const res = await fetch(url, {
-    headers: { "User-Agent": "morning-briefing/1.0" },
-  });
-  const data = await res.json();
-  if (!data.length) return null;
-  return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  for (const q of queries) {
+    const url = new URL("https://nominatim.openstreetmap.org/search");
+    url.searchParams.set("q", q);
+    url.searchParams.set("format", "json");
+    url.searchParams.set("limit", "1");
+
+    const res = await fetch(url, {
+      headers: { "User-Agent": "morning-briefing/1.0" },
+    });
+    const data = await res.json();
+    if (data.length) {
+      return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+    }
+  }
+  return null;
 }
 
 function buildLegSummary(legs) {
