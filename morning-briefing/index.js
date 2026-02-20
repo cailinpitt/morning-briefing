@@ -8,6 +8,7 @@ const { fetchTodos, printTodos } = require("./sections/todos");
 const { fetchNews, printNews } = require("./sections/news");
 const { fetchParcels, printParcels } = require("./sections/parcels");
 const { fetchChess, printChess } = require("./sections/chess");
+const { fetchOnThisDay, printOnThisDay } = require("./sections/music");
 
 async function main() {
   const testMode = process.argv.includes("--test");
@@ -16,7 +17,7 @@ async function main() {
 
   console.log("Fetching data...");
 
-  const [weather, events, todos, headlines, parcels, chess] = await Promise.all([
+  const [weather, events, todos, headlines, parcels, chess, onThisDay] = await Promise.all([
     fetchWeather().catch((err) => {
       console.error("Weather fetch failed:", err.message);
       return null;
@@ -41,6 +42,10 @@ async function main() {
       console.error("Chess fetch failed:", err.message);
       return null;
     }),
+    fetchOnThisDay().catch((err) => {
+      console.error("Music fetch failed:", err.message);
+      return null;
+    }),
   ]);
 
   console.log("Printing briefing...");
@@ -50,6 +55,7 @@ async function main() {
   printWeather(printer, weather);
   printCalendar(printer, events);
   printChess(printer, chess);
+  printOnThisDay(printer, onThisDay);
   printTodos(printer, todos);
   await printNews(printer, headlines);
   printParcels(printer, parcels);

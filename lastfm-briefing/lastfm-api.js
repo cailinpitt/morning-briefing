@@ -123,6 +123,7 @@ async function fetchArtistTags(artist) {
 }
 
 module.exports = {
+  apiCall,
   fetchWeeklyScrobbleCounts,
   fetchMonthlyScrobbleCounts,
   fetchTopArtists,
