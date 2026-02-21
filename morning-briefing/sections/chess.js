@@ -3,17 +3,25 @@ const HEADERS = {
 };
 
 function gameDuration(game) {
-  const startMatch = game.pgn?.match(/\[StartTime "(.+?)"\]/);
-  const endMatch = game.pgn?.match(/\[EndTime "(.+?)"\]/);
-  const dateMatch = game.pgn?.match(/\[UTCDate "(.+?)"\]/);
-  const endDateMatch = game.pgn?.match(/\[EndDate "(.+?)"\]/);
-  if (!startMatch || !endMatch || !dateMatch) return 0;
-  const date = dateMatch[1].replace(/\./g, "-");
-  const endDate = (endDateMatch ? endDateMatch[1] : dateMatch[1]).replace(/\./g, "-");
-  const start = new Date(`${date}T${startMatch[1]}Z`);
-  const end = new Date(`${endDate}T${endMatch[1]}Z`);
-  const seconds = (end - start) / 1000;
-  return seconds > 0 ? seconds : 0;
+  const tcMatch = game.pgn?.match(/\[TimeControl "(\d+)(?:\+(\d+))?"\]/);
+  if (!tcMatch) return 0;
+  const initial = parseInt(tcMatch[1]);
+  const increment = parseInt(tcMatch[2] || 0);
+
+  const clocks = [...(game.pgn?.matchAll(/\[%clk (\d+):(\d+):(\d+)\]/g) || [])];
+  if (clocks.length < 2) return 0;
+
+  const toSecs = (m) => parseInt(m[1]) * 3600 + parseInt(m[2]) * 60 + parseInt(m[3]);
+
+  // Even-indexed annotations are white's clock, odd are black's
+  const lastWhite = toSecs(clocks[clocks.length % 2 === 0 ? clocks.length - 2 : clocks.length - 1]);
+  const lastBlack = toSecs(clocks[clocks.length % 2 === 0 ? clocks.length - 1 : clocks.length - 2]);
+  const whiteMoves = Math.ceil(clocks.length / 2);
+  const blackMoves = Math.floor(clocks.length / 2);
+
+  const whiteUsed = initial + whiteMoves * increment - lastWhite;
+  const blackUsed = initial + blackMoves * increment - lastBlack;
+  return Math.max(0, whiteUsed + blackUsed);
 }
 
 async function fetchChess() {
