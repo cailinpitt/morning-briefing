@@ -58,16 +58,20 @@ async function main() {
   }
   const recommendations = Object.values(recScores)
     .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+    .slice(0, 10);
 
   console.log(`${scrobbles.thisMonth} scrobbles this month (${scrobbles.lastMonth} last month), ${topArtists.length} top artists.`);
 
   let spotify = { added: 0, playlistName: null };
-  try {
-    spotify = await addRecommendationsToSpotify(recommendations);
-    if (spotify.added > 0) console.log(`Added ${spotify.added} track(s) to ${spotify.playlistName} playlist.`);
-  } catch (err) {
-    console.error("Spotify error (continuing):", err.message);
+  if (testMode) {
+    console.log(`[testMode] Would try to add ${recommendations.length} tracks to Spotify platlist`);
+  } else {
+    try {
+      spotify = await addRecommendationsToSpotify(recommendations);
+      if (spotify.added > 0) console.log(`Added ${spotify.added} track(s) to ${spotify.playlistName} playlist.`);
+    } catch (err) {
+      console.error("Spotify error (continuing):", err.message);
+    }
   }
 
   printer.init();
