@@ -103,14 +103,34 @@ async function fetchSimilarTracks(track, artist, limit = 5) {
   }));
 }
 
-async function fetchAllTimeArtists(limit = 200) {
-  const data = await apiCall({
+async function fetchAllTimeArtists() {
+  const pageSize = 1000;
+  const firstPage = await apiCall({
     method: "user.getTopArtists",
     user: USERNAME,
     period: "overall",
-    limit,
+    limit: pageSize,
+    page: 1,
   });
-  return new Set(data.topartists.artist.map((a) => a.name.toLowerCase()));
+  const totalPages = parseInt(firstPage.topartists["@attr"].totalPages, 10);
+  const artists = firstPage.topartists.artist.map((a) => a.name.toLowerCase());
+
+  if (totalPages > 1) {
+    const remaining = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        apiCall({
+          method: "user.getTopArtists",
+          user: USERNAME,
+          period: "overall",
+          limit: pageSize,
+          page: i + 2,
+        }).then((d) => d.topartists.artist.map((a) => a.name.toLowerCase()))
+      )
+    );
+    for (const page of remaining) artists.push(...page);
+  }
+
+  return new Set(artists);
 }
 
 async function fetchArtistTags(artist) {

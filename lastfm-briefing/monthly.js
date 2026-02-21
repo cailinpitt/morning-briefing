@@ -37,7 +37,7 @@ async function main() {
 
   // Fetch all-time artists and similar tracks in parallel
   const [knownArtists, ...similarResults] = await Promise.all([
-    fetchAllTimeArtists(200),
+    fetchAllTimeArtists(),
     ...topTracks.map((t) =>
       fetchSimilarTracks(t.name, t.artist, 10).catch(() => []).then((similar) => ({ source: t.name, similar }))
     ),
