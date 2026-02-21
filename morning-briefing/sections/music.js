@@ -81,7 +81,7 @@ async function fetchTracksForDay(from, to, year) {
 }
 
 function printOnThisDay(printer, tracks) {
-  printer.printSectionTitle("ON THIS DAY");
+  printer.printSectionTitle("MUSIC ON THIS DAY");
 
   if (!tracks || tracks.length === 0) {
     printer.printLine("  No listening history for this date.");
