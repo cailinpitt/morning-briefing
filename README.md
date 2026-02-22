@@ -2,21 +2,6 @@
 
 Receipt printer scripts for Epson TM-T20III. Runs on a Raspberry Pi.
 
-### Remote printing
-
-To develop on your Mac and print to a Pi on the same network, set `PRINTER_DEVICE` to an SSH path:
-
-```
-PRINTER_DEVICE=ssh://user@hostname/dev/usb/lp0
-```
-
-Set up passwordless SSH so you don't have to enter your password each time:
-
-```
-ssh-keygen                       # if you don't have a key yet
-ssh-copy-id user@hostname        # copies your key to the Pi
-```
-
 ## Setup
 
 ```
@@ -321,6 +306,84 @@ npm run lastfm:monthly:test  # ASCII output to terminal
  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/
 ```
 
+## Transit briefing
+
+Prints a weekly or monthly Ventra/CTA transit summary: total rides with period-over-period comparison, rail vs bus split, top lines and routes, and highlights like your most-visited station, busiest day, and peak hour.
+
+Reads from the `ventra_transactions.json` file produced by [cta-wrapped](https://github.com/cailinpitt/cta-wrapped). No API calls — all stats are computed locally from the JSON.
+
+### Setup
+
+Set `VENTRA_DATA_PATH` in `.env` to the path of your `ventra_transactions.json`. Defaults to `~/Development/cta-wrapped/ventra_transactions.json`.
+
+```
+# Transit briefing
+VENTRA_DATA_PATH=/path/to/ventra_transactions.json
+```
+
+### Run
+
+```
+npm run transit:weekly        # print weekly report (last 7 days)
+npm run transit:weekly:test   # ASCII output to terminal
+npm run transit:monthly       # print monthly report (last 30 days)
+npm run transit:monthly:test  # ASCII output to terminal
+```
+
+### Example output
+
+```
++--------------------------------------------+
+|                  TRANSIT                   |
+|              WEEKLY REPORT                 |
+|              Feb 14 - Feb 21               |
+|                                            |
+| Total Rides                                |
+| ------------------------------------------ |
+|                   18                       |
+|          +20% from last week (15)          |
+|                                            |
+| Rail vs Bus                                |
+| ------------------------------------------ |
+| Rail .......................... 11 (61%)   |
+| Bus ............................ 7 (39%)   |
+|                                            |
+| Top Rail Lines                             |
+| ------------------------------------------ |
+| 1. Red Line .......................... 8   |
+| 2. Brown Line ........................ 3   |
+|                                            |
+| Top Bus Routes                             |
+| ------------------------------------------ |
+| 1. Route 22 .......................... 4   |
+| 2. Route 36 .......................... 2   |
+| 3. Route 151 ......................... 1   |
+|                                            |
+| Highlights                                 |
+| ------------------------------------------ |
+| Top Rail Station ............. Fullerton   |
+| Busiest Day .................... Tuesday   |
+| Peak Hour .......................... 8am   |
+|                                            |
++--------------------------------------------+
+ \/  \/  \/  \/  \/  \/  \/  \/  \/  \/  \/
+```
+
 ## Test mode
 
 All scripts accept `--test` to print ASCII receipts to the terminal instead of the printer.
+
+### Remote printing
+
+To develop on your Mac and print to a Pi on the same network, set `PRINTER_DEVICE` to an SSH path:
+
+```
+PRINTER_DEVICE=ssh://user@hostname/dev/usb/lp0
+```
+
+Set up passwordless SSH so you don't have to enter your password each time:
+
+```
+ssh-keygen                       # if you don't have a key yet
+ssh-copy-id user@hostname        # copies your key to the Pi
+```

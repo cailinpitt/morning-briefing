@@ -16,7 +16,11 @@
     "lastfm:weekly:test": "node lastfm-briefing/index.js --test",
     "lastfm:monthly": "node lastfm-briefing/monthly.js",
     "lastfm:monthly:test": "node lastfm-briefing/monthly.js --test",
-    "spotify:auth": "node lastfm-briefing/auth-spotify.js"
+    "spotify:auth": "node lastfm-briefing/auth-spotify.js",
+    "transit:weekly": "node transit-briefing/index.js",
+    "transit:weekly:test": "node transit-briefing/index.js --test",
+    "transit:monthly": "node transit-briefing/monthly.js",
+    "transit:monthly:test": "node transit-briefing/monthly.js --test"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
