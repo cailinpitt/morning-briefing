@@ -17,7 +17,7 @@ function leaderLine(label, value) {
 }
 
 async function printBriefing(printer, data, options = {}) {
-  const { current, previous, topRailLines, topBusRoutes, topStation, busiestDay, peakHour } = data;
+  const { current, previous, topRailLines, topBusRoutes, topStation, busiestDay, peakHour, uniqueStations, uniqueRoutes, weekdayRides, weekendRides, avgCostPerRide } = data;
   const title = options.title || "WEEKLY REPORT";
   const periodLabel = options.periodLabel || "last week";
   const dateRange = options.dateRangeStr || rollingDateRange(options.days || 7);
@@ -58,6 +58,16 @@ async function printBriefing(printer, data, options = {}) {
     printer.printLine(leaderLine("Bus", `${current.bus.totalRides} (${busPct}%)`));
   }
 
+  // Weekday vs Weekend split
+  if (weekdayRides + weekendRides > 0) {
+    printer.printSectionTitle("Weekday vs Weekend");
+    const total = weekdayRides + weekendRides;
+    const wdPct = Math.round((weekdayRides / total) * 100);
+    const wePct = 100 - wdPct;
+    printer.printLine(leaderLine("Weekday", `${weekdayRides} (${wdPct}%)`));
+    printer.printLine(leaderLine("Weekend", `${weekendRides} (${wePct}%)`));
+  }
+
   // Top rail lines
   if (topRailLines.length > 0) {
     printer.printSectionTitle("Top Rail Lines");
@@ -81,6 +91,8 @@ async function printBriefing(printer, data, options = {}) {
   if (topStation) highlights.push(leaderLine("Top Rail Station", topStation[0]));
   if (busiestDay) highlights.push(leaderLine("Busiest Day", busiestDay[0]));
   if (peakHour) highlights.push(leaderLine("Peak Hour", formatHour(Number(peakHour[0]))));
+  if (uniqueStations > 0) highlights.push(leaderLine("Unique Rail Stations", String(uniqueStations)));
+  if (uniqueRoutes > 0) highlights.push(leaderLine("Unique Bus Routes", String(uniqueRoutes)));
 
   if (highlights.length > 0) {
     printer.printSectionTitle("Highlights");
@@ -91,6 +103,7 @@ async function printBriefing(printer, data, options = {}) {
   if (current.spending.total > 0) {
     printer.printSectionTitle("Spending");
     printer.printLine(leaderLine("Total", `$${current.spending.total.toFixed(2)}`));
+    printer.printLine(leaderLine("Avg per Ride", `$${avgCostPerRide.toFixed(2)}`));
     if (previous.spending.total > 0) {
       const diff = current.spending.total - previous.spending.total;
       const sign = diff >= 0 ? "+" : "";

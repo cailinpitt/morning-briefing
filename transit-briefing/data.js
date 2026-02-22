@@ -77,6 +77,12 @@ function formatHour(h) {
 function buildStats(current, previous) {
   const curr = analyzeTransactions(current);
   const prev = analyzeTransactions(previous);
+
+  const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+  const weekendDays = ["Saturday", "Sunday"];
+  const weekdayRides = weekdays.reduce((sum, d) => sum + (curr.temporal.byDayOfWeek[d] || 0), 0);
+  const weekendRides = weekendDays.reduce((sum, d) => sum + (curr.temporal.byDayOfWeek[d] || 0), 0);
+
   return {
     current: curr,
     previous: prev,
@@ -85,6 +91,11 @@ function buildStats(current, previous) {
     topStation: topEntries(curr.rail.stations, 1)[0] || null,
     busiestDay: topEntries(curr.temporal.byDayOfWeek, 1)[0] || null,
     peakHour: topEntries(curr.temporal.byHour, 1)[0] || null,
+    uniqueStations: Object.keys(curr.rail.stations).length,
+    uniqueRoutes: Object.keys(curr.bus.routes).length,
+    weekdayRides,
+    weekendRides,
+    avgCostPerRide: curr.totalRides > 0 ? curr.spending.total / curr.totalRides : 0,
   };
 }
 
