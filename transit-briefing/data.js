@@ -74,17 +74,9 @@ function formatHour(h) {
   return `${h - 12}pm`;
 }
 
-function getTransitStats(days) {
-  const all = loadTransactions();
-  const now = Date.now();
-  const periodMs = days * 24 * 60 * 60 * 1000;
-
-  const current = filterPeriod(all, days, now);
-  const previous = filterPeriod(all, days, now - periodMs);
-
+function buildStats(current, previous) {
   const curr = analyzeTransactions(current);
   const prev = analyzeTransactions(previous);
-
   return {
     current: curr,
     previous: prev,
@@ -96,4 +88,28 @@ function getTransitStats(days) {
   };
 }
 
-module.exports = { getTransitStats, formatHour };
+function getTransitStats(days) {
+  const all = loadTransactions();
+  const now = Date.now();
+  const periodMs = days * 24 * 60 * 60 * 1000;
+  return buildStats(
+    filterPeriod(all, days, now),
+    filterPeriod(all, days, now - periodMs)
+  );
+}
+
+function getCalendarMonthStats(year, month) {
+  const all = loadTransactions();
+  const startMs = new Date(year, month, 1).getTime();
+  const endMs = new Date(year, month + 1, 1).getTime();
+  const prevStartMs = new Date(year, month - 1, 1).getTime();
+  const current = all.filter(
+    (t) => t.timestamp >= startMs && t.timestamp < endMs && t.transactionType !== "Sale"
+  );
+  const previous = all.filter(
+    (t) => t.timestamp >= prevStartMs && t.timestamp < startMs && t.transactionType !== "Sale"
+  );
+  return buildStats(current, previous);
+}
+
+module.exports = { getTransitStats, getCalendarMonthStats, formatHour };

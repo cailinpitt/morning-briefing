@@ -16,7 +16,7 @@ async function main() {
   console.log(`${data.current.totalRides} rides this month (${data.previous.totalRides} last month).`);
 
   printer.init();
-  await printBriefing(printer, data, DAYS);
+  await printBriefing(printer, data, { title: "MONTHLY REPORT", periodLabel: "last month", days: DAYS });
   printer.flush();
 
   console.log("Done.");

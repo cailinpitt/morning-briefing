@@ -1,10 +1,8 @@
 require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
 const { Printer } = require("../printer");
-const { getTransitStats } = require("./data");
+const { getTransitStats, getCalendarMonthStats } = require("./data");
 const { printBriefing } = require("./print-briefing");
-
-const DAYS = 7;
 
 async function main() {
   const testMode = process.argv.includes("--test");
@@ -12,11 +10,28 @@ async function main() {
   const printer = new Printer(devicePath, { testMode });
 
   console.log("Reading transit data...");
-  const data = getTransitStats(DAYS);
-  console.log(`${data.current.totalRides} rides this week (${data.previous.totalRides} last week).`);
+
+  const today = new Date();
+  let data, options;
+
+  if (today.getDate() === 1) {
+    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const monthName = lastMonth.toLocaleString("en-US", { month: "long" });
+    data = getCalendarMonthStats(lastMonth.getFullYear(), lastMonth.getMonth());
+    options = {
+      title: `${monthName.toUpperCase()} REPORT`,
+      periodLabel: "prior month",
+      dateRangeStr: `${monthName} ${lastMonth.getFullYear()}`,
+    };
+    console.log(`${data.current.totalRides} rides in ${monthName} (${data.previous.totalRides} prior month).`);
+  } else {
+    data = getTransitStats(7);
+    options = { title: "WEEKLY REPORT", periodLabel: "last week", days: 7 };
+    console.log(`${data.current.totalRides} rides this week (${data.previous.totalRides} last week).`);
+  }
 
   printer.init();
-  await printBriefing(printer, data, DAYS);
+  await printBriefing(printer, data, options);
   printer.flush();
 
   console.log("Done.");

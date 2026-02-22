@@ -1,7 +1,7 @@
 const { PAPER_WIDTH } = require("../printer");
 const { formatHour } = require("./data");
 
-function formatDateRange(days) {
+function rollingDateRange(days) {
   const now = new Date();
   const start = new Date(now - days * 24 * 60 * 60 * 1000);
   const fmt = (d) =>
@@ -16,10 +16,11 @@ function leaderLine(label, value) {
   return `${label} ${dots} ${value}`;
 }
 
-async function printBriefing(printer, data, days) {
+async function printBriefing(printer, data, options = {}) {
   const { current, previous, topRailLines, topBusRoutes, topStation, busiestDay, peakHour } = data;
-  const title = days <= 7 ? "WEEKLY REPORT" : "MONTHLY REPORT";
-  const periodLabel = days <= 7 ? "last week" : "last month";
+  const title = options.title || "WEEKLY REPORT";
+  const periodLabel = options.periodLabel || "last week";
+  const dateRange = options.dateRangeStr || rollingDateRange(options.days || 7);
 
   // Header
   printer.alignCenter();
@@ -29,7 +30,7 @@ async function printBriefing(printer, data, days) {
   printer.sizeNormal();
   printer.printLine(title);
   printer.bold(false);
-  printer.printLine(formatDateRange(days));
+  printer.printLine(dateRange);
   printer.alignLeft();
 
   // Total rides
