@@ -133,6 +133,42 @@ async function fetchAllTimeArtists() {
   return new Set(artists);
 }
 
+async function fetchAllTimeTracks() {
+  const pageSize = 1000;
+  const firstPage = await apiCall({
+    method: "user.getTopTracks",
+    user: USERNAME,
+    period: "overall",
+    limit: pageSize,
+    page: 1,
+  });
+  const totalPages = parseInt(firstPage.toptracks["@attr"].totalPages, 10);
+  const tracks = firstPage.toptracks.track.map(
+    (t) => `${t.artist.name.toLowerCase()}\0${t.name.toLowerCase()}`
+  );
+
+  if (totalPages > 1) {
+    const remaining = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, i) =>
+        apiCall({
+          method: "user.getTopTracks",
+          user: USERNAME,
+          period: "overall",
+          limit: pageSize,
+          page: i + 2,
+        }).then((d) =>
+          d.toptracks.track.map(
+            (t) => `${t.artist.name.toLowerCase()}\0${t.name.toLowerCase()}`
+          )
+        )
+      )
+    );
+    for (const page of remaining) tracks.push(...page);
+  }
+
+  return new Set(tracks);
+}
+
 async function fetchArtistTags(artist) {
   const data = await apiCall({
     method: "artist.getTopTags",
@@ -151,5 +187,6 @@ module.exports = {
   fetchTopTracks,
   fetchSimilarTracks,
   fetchAllTimeArtists,
+  fetchAllTimeTracks,
   fetchArtistTags,
 };

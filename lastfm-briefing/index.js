@@ -7,7 +7,7 @@ const {
   fetchTopAlbums,
   fetchTopTracks,
   fetchSimilarTracks,
-  fetchAllTimeArtists,
+  fetchAllTimeTracks,
   fetchArtistTags,
 } = require("./lastfm-api");
 const { printBriefing } = require("./print-briefing");
@@ -35,20 +35,20 @@ async function main() {
     })
   );
 
-  // Fetch all-time artists and similar tracks in parallel
-  const [knownArtists, ...similarResults] = await Promise.all([
-    fetchAllTimeArtists(),
+  // Fetch all-time tracks and similar tracks in parallel
+  const [knownTracks, ...similarResults] = await Promise.all([
+    fetchAllTimeTracks(),
     ...topTracks.map((t) =>
-      fetchSimilarTracks(t.name, t.artist, 10).catch(() => []).then((similar) => ({ source: t.name, similar }))
+      fetchSimilarTracks(t.name, t.artist, 10).catch(() => []).then((similar) => ({ source: `${t.name} by ${t.artist}`, similar }))
     ),
   ]);
 
-  // Build recommendations, excluding artists already listened to
+  // Build recommendations, excluding tracks already listened to
   const recScores = {};
   for (const { source, similar } of similarResults) {
     for (const s of similar) {
-      if (knownArtists.has(s.artist.toLowerCase())) continue;
       const key = `${s.artist.toLowerCase()}\0${s.name.toLowerCase()}`;
+      if (knownTracks.has(key)) continue;
       if (!recScores[key]) {
         recScores[key] = { name: s.name, artist: s.artist, score: 0, because: [] };
       }

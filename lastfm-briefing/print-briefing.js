@@ -68,11 +68,12 @@ async function printBriefing(printer, data) {
     printer.printSectionTitle("Top Artists");
     for (let i = 0; i < topArtists.length; i++) {
       const a = topArtists[i];
-      const label = `${i + 1}. ${a.name}`;
+      const num = String(i + 1).padStart(2);
+      const label = `${num}. ${a.name}`;
       const value = `${a.playcount}`;
       if (label.length + value.length + 2 > PAPER_WIDTH) {
-        printer.printLine(`${i + 1}. ${a.name}`);
-        printer.printLine(leaderLine("   ", value));
+        printer.printLine(`${num}. ${a.name}`);
+        printer.printLine(leaderLine("    ", value));
       } else {
         printer.printLine(leaderLine(label, value));
       }
@@ -84,14 +85,15 @@ async function printBriefing(printer, data) {
     printer.printSectionTitle("Top Albums");
     for (let i = 0; i < topAlbums.length; i++) {
       const a = topAlbums[i];
-      const label = `${i + 1}. ${a.name}`;
+      const num = String(i + 1).padStart(2);
+      const label = `${num}. ${a.name}`;
       const value = `${a.playcount}`;
       if (label.length + value.length + 2 > PAPER_WIDTH) {
-        printer.printLine(`${i + 1}. ${a.name}`);
-        printer.printLine(leaderLine(`   ${a.artist}`, value));
+        printer.printLine(`${num}. ${a.name}`);
+        printer.printLine(leaderLine(`    ${a.artist}`, value));
       } else {
         printer.printLine(leaderLine(label, value));
-        printer.printLine(`   ${a.artist}`);
+        printer.printLine(`    ${a.artist}`);
       }
     }
   }
@@ -101,14 +103,15 @@ async function printBriefing(printer, data) {
     printer.printSectionTitle("Top Tracks");
     for (let i = 0; i < topTracks.length; i++) {
       const t = topTracks[i];
-      const label = `${i + 1}. ${t.name}`;
+      const num = String(i + 1).padStart(2);
+      const label = `${num}. ${t.name}`;
       const value = `${t.playcount}`;
       if (label.length + value.length + 2 > PAPER_WIDTH) {
-        printer.printLine(`${i + 1}. ${t.name}`);
-        printer.printLine(leaderLine(`   ${t.artist}`, value));
+        printer.printLine(`${num}. ${t.name}`);
+        printer.printLine(leaderLine(`    ${t.artist}`, value));
       } else {
         printer.printLine(leaderLine(label, value));
-        printer.printLine(`   ${t.artist}`);
+        printer.printLine(`    ${t.artist}`);
       }
     }
   }
@@ -118,7 +121,7 @@ async function printBriefing(printer, data) {
   if (genres.length > 0) {
     printer.printSectionTitle("Top Genres");
     for (let i = 0; i < genres.length; i++) {
-      printer.printLine(`${i + 1}. ${genres[i]}`);
+      printer.printLine(`${String(i + 1).padStart(2)}. ${genres[i]}`);
     }
   }
 
@@ -127,10 +130,11 @@ async function printBriefing(printer, data) {
     printer.printSectionTitle("Recommended");
     for (let i = 0; i < recommendations.length; i++) {
       const r = recommendations[i];
-      printer.printLine(`${i + 1}. ${r.name}`);
-      printer.printLine(`   ${r.artist}`);
+      const num = String(i + 1).padStart(2);
+      printer.printLine(`${num}. ${r.name}`);
+      printer.printLine(`    ${r.artist}`);
       const sources = [...new Set(r.because)].slice(0, 2).join(", ");
-      printer.printLine(`   via ${sources}`);
+      printer.printLine(`    via ${sources}`);
     }
     if (spotify?.added > 0) {
       const name = spotify.playlistName.replace(/[^\x20-\x7E]/g, "").replace(/\s+/g, " ").trim();
