@@ -156,25 +156,26 @@ async function addTravelInfo(event) {
 }
 
 async function fetchCalendarEvents() {
-  const clientId = process.env.GOOGLE_CLIENT_ID;
-  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE;
+  const calendarId = process.env.GOOGLE_CALENDAR_ID;
 
-  if (!clientId || clientId === "your_client_id_here" || !refreshToken) {
+  if (!keyFile || !calendarId) {
     return null;
   }
 
-  const oauth2Client = new google.auth.OAuth2(clientId, clientSecret);
-  oauth2Client.setCredentials({ refresh_token: refreshToken });
+  const auth = new google.auth.GoogleAuth({
+    keyFile,
+    scopes: ["https://www.googleapis.com/auth/calendar.readonly"],
+  });
 
-  const calendar = google.calendar({ version: "v3", auth: oauth2Client });
+  const calendar = google.calendar({ version: "v3", auth });
 
   const now = new Date();
   const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000);
 
   const res = await calendar.events.list({
-    calendarId: "primary",
+    calendarId,
     timeMin: startOfDay.toISOString(),
     timeMax: endOfDay.toISOString(),
     singleEvents: true,
